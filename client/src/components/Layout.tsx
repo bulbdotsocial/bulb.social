@@ -13,14 +13,19 @@ import {
   useTheme,
   useMediaQuery,
   Container,
+  Avatar,
+  InputBase,
+  Paper,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
   Home as HomeIcon,
-  Lightbulb as LightbulbIcon,
-  Person as PersonIcon,
   Search as SearchIcon,
+  Explore as ExploreIcon,
+  FavoriteBorder as FavoriteBorderIcon,
+  Person as PersonIcon,
   Add as AddIcon,
+  CameraAlt as CameraIcon,
 } from '@mui/icons-material';
 import PWAInstallPrompt from './PWAInstallPrompt';
 
@@ -39,8 +44,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const menuItems = [
     { text: 'Home', icon: <HomeIcon />, path: '/' },
-    { text: 'My Ideas', icon: <LightbulbIcon />, path: '/ideas' },
-    { text: 'Discover', icon: <SearchIcon />, path: '/discover' },
+    { text: 'Explore', icon: <ExploreIcon />, path: '/explore' },
+    { text: 'Activity', icon: <FavoriteBorderIcon />, path: '/activity' },
     { text: 'Profile', icon: <PersonIcon />, path: '/profile' },
   ];
 
@@ -54,29 +59,66 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       role="presentation"
       onClick={handleDrawerToggle}
     >
-      <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-        <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+      <Box sx={{ p: 3, borderBottom: 1, borderColor: 'divider' }}>
+        <Typography 
+          variant="h5" 
+          sx={{ 
+            fontFamily: 'cursive',
+            fontWeight: 'bold',
+            background: 'linear-gradient(45deg, #E4405F, #405DE6, #833AB4)',
+            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+          }}
+        >
           💡 Bulb
         </Typography>
       </Box>
-      <List>
+      
+      {/* Search on mobile */}
+      <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+        <Paper
+          component="form"
+          sx={{
+            p: '8px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            bgcolor: '#fafafa',
+            border: '1px solid #dbdbdb',
+            borderRadius: 8,
+          }}
+          elevation={0}
+        >
+          <SearchIcon sx={{ color: '#8e8e8e', mr: 1 }} />
+          <InputBase
+            sx={{ ml: 1, flex: 1, fontSize: '0.875rem' }}
+            placeholder="Search"
+            inputProps={{ 'aria-label': 'search' }}
+          />
+        </Paper>
+      </Box>
+
+      <List sx={{ pt: 1 }}>
         {menuItems.map((item) => (
           <ListItem 
             key={item.text}
             sx={{
               cursor: 'pointer',
+              py: 1.5,
+              px: 3,
               '&:hover': {
                 bgcolor: 'action.hover',
               },
             }}
           >
-            <ListItemIcon sx={{ color: 'primary.main' }}>
+            <ListItemIcon sx={{ color: 'text.primary', minWidth: 40 }}>
               {item.icon}
             </ListItemIcon>
             <ListItemText 
               primary={item.text}
               primaryTypographyProps={{
-                fontWeight: 500,
+                fontWeight: 400,
+                fontSize: '1rem',
               }}
             />
           </ListItem>
@@ -98,31 +140,106 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         }}
         elevation={0}
       >
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2 }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography
-            variant="h6"
-            noWrap
-            component="div"
-            sx={{
-              flexGrow: 1,
-              fontWeight: 'bold',
-              color: 'primary.main',
-            }}
-          >
-            💡 Bulb
-          </Typography>
-          <IconButton color="primary" aria-label="add new idea">
-            <AddIcon />
-          </IconButton>
+        <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 2, sm: 3 } }}>
+          {/* Left side - Menu button on mobile, Logo on desktop */}
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            {isMobile && (
+              <IconButton
+                color="inherit"
+                aria-label="open drawer"
+                edge="start"
+                onClick={handleDrawerToggle}
+                sx={{ mr: 1 }}
+              >
+                <MenuIcon />
+              </IconButton>
+            )}
+            <Typography
+              variant="h5"
+              noWrap
+              component="div"
+              sx={{
+                fontFamily: 'cursive',
+                fontWeight: 'bold',
+                color: 'text.primary',
+                background: 'linear-gradient(45deg, #E4405F, #405DE6, #833AB4)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              💡 Bulb
+            </Typography>
+          </Box>
+
+          {/* Center - Search bar on desktop */}
+          {!isMobile && (
+            <Paper
+              component="form"
+              sx={{
+                p: '2px 16px',
+                display: 'flex',
+                alignItems: 'center',
+                width: 268,
+                bgcolor: '#fafafa',
+                border: '1px solid #dbdbdb',
+                borderRadius: 8,
+                '&:focus-within': {
+                  borderColor: '#8e8e8e',
+                },
+              }}
+              elevation={0}
+            >
+              <SearchIcon sx={{ color: '#8e8e8e', mr: 1 }} />
+              <InputBase
+                sx={{ ml: 1, flex: 1, fontSize: '0.875rem' }}
+                placeholder="Search"
+                inputProps={{ 'aria-label': 'search' }}
+              />
+            </Paper>
+          )}
+
+          {/* Right side - Action buttons */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {!isMobile && (
+              <>
+                <IconButton color="inherit" aria-label="home">
+                  <HomeIcon />
+                </IconButton>
+                <IconButton color="inherit" aria-label="explore">
+                  <ExploreIcon />
+                </IconButton>
+                <IconButton color="inherit" aria-label="activity">
+                  <FavoriteBorderIcon />
+                </IconButton>
+              </>
+            )}
+            <IconButton 
+              color="primary" 
+              aria-label="add post"
+              sx={{
+                bgcolor: 'primary.main',
+                color: 'white',
+                '&:hover': {
+                  bgcolor: 'primary.dark',
+                },
+                width: 32,
+                height: 32,
+              }}
+            >
+              <AddIcon fontSize="small" />
+            </IconButton>
+            <Avatar
+              sx={{
+                width: 28,
+                height: 28,
+                bgcolor: 'primary.main',
+                cursor: 'pointer',
+              }}
+            >
+              U
+            </Avatar>
+          </Box>
         </Toolbar>
       </AppBar>
 
@@ -158,8 +275,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           maxWidth="lg"
           sx={{
             flexGrow: 1,
-            py: { xs: 2, sm: 3 },
-            px: { xs: 2, sm: 3 },
+            py: 0,
+            px: 0,
+            maxWidth: 'none !important',
           }}
         >
           {children}
