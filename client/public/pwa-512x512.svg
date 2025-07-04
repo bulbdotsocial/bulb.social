@@ -1,0 +1,18 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" fill="#1976d2"/>
+  <g transform="translate(128, 86)">
+    <!-- Bulb shape -->
+    <path d="M128 42.67C128 19.2 147.2 0 170.67 0C194.13 0 213.33 19.2 213.33 42.67C213.33 68.27 200.53 89.6 181.33 100.27L181.33 117.33C181.33 123.2 176.53 128 170.67 128C164.8 128 160 123.2 160 117.33L160 100.27C140.8 89.6 128 68.27 128 42.67Z" fill="white"/>
+    <!-- Bulb base -->
+    <rect x="154.67" y="128" width="32" height="21.33" fill="white"/>
+    <rect x="149.33" y="149.33" width="42.67" height="10.67" fill="white"/>
+    <!-- Light rays -->
+    <path d="M85.33 42.67L106.67 42.67" stroke="white" stroke-width="5.33" stroke-linecap="round"/>
+    <path d="M234.67 42.67L256 42.67" stroke="white" stroke-width="5.33" stroke-linecap="round"/>
+    <path d="M170.67 0L170.67 21.33" stroke="white" stroke-width="5.33" stroke-linecap="round"/>
+    <path d="M110.93 68.27L123.73 81.07" stroke="white" stroke-width="5.33" stroke-linecap="round"/>
+    <path d="M217.6 81.07L230.4 68.27" stroke="white" stroke-width="5.33" stroke-linecap="round"/>
+    <path d="M110.93 17.07L123.73 4.27" stroke="white" stroke-width="5.33" stroke-linecap="round"/>
+    <path d="M217.6 4.27L230.4 17.07" stroke="white" stroke-width="5.33" stroke-linecap="round"/>
+  </g>
+</svg>

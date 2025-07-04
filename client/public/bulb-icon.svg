@@ -1,0 +1,18 @@
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="192" height="192" fill="#1976d2"/>
+  <g transform="translate(48, 32)">
+    <!-- Bulb shape -->
+    <path d="M48 16C48 7.2 55.2 0 64 0C72.8 0 80 7.2 80 16C80 25.6 75.2 33.6 68 37.6L68 44C68 46.2 66.2 48 64 48C61.8 48 60 46.2 60 44L60 37.6C52.8 33.6 48 25.6 48 16Z" fill="white"/>
+    <!-- Bulb base -->
+    <rect x="58" y="48" width="12" height="8" fill="white"/>
+    <rect x="56" y="56" width="16" height="4" fill="white"/>
+    <!-- Light rays -->
+    <path d="M32 16L40 16" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    <path d="M88 16L96 16" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    <path d="M64 0L64 8" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    <path d="M41.6 25.6L46.4 30.4" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    <path d="M81.6 30.4L86.4 25.6" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    <path d="M41.6 6.4L46.4 1.6" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    <path d="M81.6 1.6L86.4 6.4" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  </g>
+</svg>
