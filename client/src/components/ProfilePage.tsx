@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { usePrivy } from '@privy-io/react-auth';
 import {
   Box,
   Avatar,
@@ -12,11 +13,13 @@ import {
   useTheme,
   useMediaQuery,
   Divider,
+  Chip,
 } from '@mui/material';
 import {
   Settings as SettingsIcon,
   GridOn as GridOnIcon,
   BookmarkBorder as BookmarkIcon,
+  AccountBalanceWallet as WalletIcon,
 } from '@mui/icons-material';
 
 interface ProfileData {
@@ -42,11 +45,12 @@ const ProfilePage: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [currentTab, setCurrentTab] = useState(0);
+  const { user } = usePrivy();
 
-  // Mock user data
+  // User data from Privy with fallbacks
   const profileData: ProfileData = {
-    username: 'bulb_creator',
-    fullName: 'Bulb Creator',
+    username: user?.wallet?.address ? `${user.wallet.address.slice(0, 6)}...${user.wallet.address.slice(-4)}` : 'web3_user',
+    fullName: user?.email?.address || user?.wallet?.address?.slice(0, 8) || 'Web3 User',
     bio: '🚀 Web3 Innovation Platform\n💡 Sharing ideas that change the world\n🌟 Building the future of social media',
     website: 'bulb.social',
     postsCount: 42,
@@ -198,7 +202,8 @@ const ProfilePage: React.FC = () => {
                 mb: { xs: 1, sm: 0 },
               }}
             >
-              BC
+              {user?.wallet?.address ? user.wallet.address.slice(2, 4).toUpperCase() : 
+               user?.email?.address ? user.email.address.charAt(0).toUpperCase() : 'BC'}
             </Avatar>
           </Box>
 
@@ -312,6 +317,25 @@ const ProfilePage: React.FC = () => {
               >
                 {profileData.bio}
               </Typography>
+              
+              {/* Wallet Information */}
+              {user?.wallet?.address && (
+                <Box sx={{ mb: 1 }}>
+                  <Chip
+                    icon={<WalletIcon />}
+                    label={`${user.wallet.address.slice(0, 6)}...${user.wallet.address.slice(-4)}`}
+                    variant="outlined"
+                    size="small"
+                    sx={{
+                      fontSize: '0.75rem',
+                      '& .MuiChip-icon': {
+                        fontSize: '1rem',
+                      },
+                    }}
+                  />
+                </Box>
+              )}
+              
               <Typography
                 variant="body2"
                 sx={{

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useLogout, usePrivy } from '@privy-io/react-auth';
 import {
   AppBar,
   Toolbar,
@@ -17,6 +18,7 @@ import {
   Avatar,
   InputBase,
   Paper,
+  Divider,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -26,6 +28,7 @@ import {
   FavoriteBorder as FavoriteBorderIcon,
   Person as PersonIcon,
   Add as AddIcon,
+  Logout as LogoutIcon,
 } from '@mui/icons-material';
 import PWAInstallPrompt from './PWAInstallPrompt';
 
@@ -39,6 +42,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout } = useLogout();
+  const { user } = usePrivy();
 
   const handleDrawerToggle = () => {
     setDrawerOpen(!drawerOpen);
@@ -46,6 +51,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const handleNavigation = (path: string) => {
     navigate(path);
+    if (isMobile) {
+      setDrawerOpen(false);
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
     if (isMobile) {
       setDrawerOpen(false);
     }
@@ -134,6 +146,32 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             />
           </ListItem>
         ))}
+        
+        <Divider sx={{ my: 1 }} />
+        
+        {/* Logout option */}
+        <ListItem 
+          onClick={handleLogout}
+          sx={{
+            cursor: 'pointer',
+            py: 1.5,
+            px: 3,
+            '&:hover': {
+              bgcolor: 'action.hover',
+            },
+          }}
+        >
+          <ListItemIcon sx={{ color: 'text.primary', minWidth: 40 }}>
+            <LogoutIcon />
+          </ListItemIcon>
+          <ListItemText 
+            primary="Logout"
+            primaryTypographyProps={{
+              fontWeight: 400,
+              fontSize: '1rem',
+            }}
+          />
+        </ListItem>
       </List>
     </Box>
   );
@@ -270,9 +308,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 cursor: 'pointer',
                 border: location.pathname === '/profile' ? '2px solid' : 'none',
                 borderColor: 'primary.main',
+                fontSize: '0.75rem',
               }}
             >
-              U
+              {user?.wallet?.address ? user.wallet.address.slice(2, 4).toUpperCase() : 
+               user?.email?.address ? user.email.address.charAt(0).toUpperCase() : 'U'}
             </Avatar>
           </Box>
         </Toolbar>
