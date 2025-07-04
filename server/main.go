@@ -1,9 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"mime/multipart"
 	"net"
 	"net/http"
 	"os"
@@ -70,8 +74,17 @@ func main() {
 				"message": "Unable to save the file",
 			})
 		}
+
+		ipfsHash, err := pinIPFS(newFileName, completeNewPath)
+		if err != nil {
+			log.Println("Error pinning to IPFS:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Failed to pin file to IPFS",
+			})
+		}
 		c.JSON(http.StatusOK, gin.H{
-			"message": "File uploaded successfully",
+			"message": "File uploaded and stored on IPFS",
+			"cid":     ipfsHash,
 		})
 	})
 
@@ -125,4 +138,49 @@ func main() {
 		log.Println("error removing temporary directory:", err)
 		os.Exit(1)
 	}
+}
+
+type ipfsResp struct {
+	Name string `json:"Name"`
+	Hash string `json:"Hash"`
+	Size string `json:"Size"`
+}
+
+func pinIPFS(newFileName, completeNewPath string) (string, error) {
+	// --- Send file to IPFS via RPC (HTTP API) ---
+	ipfsApiUrl := "http://127.0.0.1:5001/api/v0/add"
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("file", newFileName)
+	if err != nil {
+		return "", fmt.Errorf("failed to create form file: %w", err)
+	}
+	f, err := os.Open(completeNewPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to open file: %w", err)
+	}
+	defer f.Close()
+	if _, err := io.Copy(part, f); err != nil {
+		return "", fmt.Errorf("failed to copy file: %w", err)
+	}
+	writer.Close()
+
+	req, err := http.NewRequest(http.MethodPost, ipfsApiUrl, body)
+	if err != nil {
+		return "", fmt.Errorf("failed to create IPFS request: %w", err)
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to contact IPFS: %w", err)
+	}
+	defer resp.Body.Close()
+
+	var ipfsResult ipfsResp
+	if err := json.NewDecoder(resp.Body).Decode(&ipfsResult); err != nil {
+		return "", fmt.Errorf("failed to parse IPFS response: %w", err)
+	}
+
+	return ipfsResult.Hash, nil
 }
