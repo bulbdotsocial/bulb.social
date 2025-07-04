@@ -115,24 +115,20 @@ contract ProfileManager {
         serverOwner = msg.sender;
     }
 
-    function createProfile(
-        address _userID,
-        string memory _userName
-    ) external onlyServerOwner {
-        require(_userID != address(0), "Invalid user address");
+    function createProfile(string memory _userName) external onlyServerOwner {
         require(
-            !profileExists[_userID],
+            !profileExists[msg.sender],
             "Profile already exists for this user"
         );
         require(bytes(_userName).length > 0, "Username required");
 
-        UserProfile newProfile = new UserProfile(_userID, _userName);
+        UserProfile newProfile = new UserProfile(msg.sender, _userName);
 
-        userProfiles[_userID] = address(newProfile);
-        profileExists[_userID] = true;
-        allUsers.push(_userID);
+        userProfiles[msg.sender] = address(newProfile);
+        profileExists[msg.sender] = true;
+        allUsers.push(msg.sender);
 
-        emit ProfileCreated(_userID, address(newProfile), _userName);
+        emit ProfileCreated(msg.sender, address(newProfile), _userName);
     }
 
     function getUserProfile(address _userID) external view returns (address) {
