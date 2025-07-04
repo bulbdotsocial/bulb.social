@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   AppBar,
   Toolbar,
@@ -25,7 +26,6 @@ import {
   FavoriteBorder as FavoriteBorderIcon,
   Person as PersonIcon,
   Add as AddIcon,
-  CameraAlt as CameraIcon,
 } from '@mui/icons-material';
 import PWAInstallPrompt from './PWAInstallPrompt';
 
@@ -37,9 +37,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const handleDrawerToggle = () => {
     setDrawerOpen(!drawerOpen);
+  };
+
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    if (isMobile) {
+      setDrawerOpen(false);
+    }
   };
 
   const menuItems = [
@@ -102,6 +111,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         {menuItems.map((item) => (
           <ListItem 
             key={item.text}
+            onClick={() => handleNavigation(item.path)}
             sx={{
               cursor: 'pointer',
               py: 1.5,
@@ -109,6 +119,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               '&:hover': {
                 bgcolor: 'action.hover',
               },
+              bgcolor: location.pathname === item.path ? 'action.selected' : 'transparent',
             }}
           >
             <ListItemIcon sx={{ color: 'text.primary', minWidth: 40 }}>
@@ -117,7 +128,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <ListItemText 
               primary={item.text}
               primaryTypographyProps={{
-                fontWeight: 400,
+                fontWeight: location.pathname === item.path ? 600 : 400,
                 fontSize: '1rem',
               }}
             />
@@ -203,13 +214,34 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {!isMobile && (
               <>
-                <IconButton color="inherit" aria-label="home">
+                <IconButton 
+                  color="inherit" 
+                  aria-label="home"
+                  onClick={() => handleNavigation('/')}
+                  sx={{
+                    color: location.pathname === '/' ? 'primary.main' : 'inherit',
+                  }}
+                >
                   <HomeIcon />
                 </IconButton>
-                <IconButton color="inherit" aria-label="explore">
+                <IconButton 
+                  color="inherit" 
+                  aria-label="explore"
+                  onClick={() => handleNavigation('/explore')}
+                  sx={{
+                    color: location.pathname === '/explore' ? 'primary.main' : 'inherit',
+                  }}
+                >
                   <ExploreIcon />
                 </IconButton>
-                <IconButton color="inherit" aria-label="activity">
+                <IconButton 
+                  color="inherit" 
+                  aria-label="activity"
+                  onClick={() => handleNavigation('/activity')}
+                  sx={{
+                    color: location.pathname === '/activity' ? 'primary.main' : 'inherit',
+                  }}
+                >
                   <FavoriteBorderIcon />
                 </IconButton>
               </>
@@ -230,11 +262,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <AddIcon fontSize="small" />
             </IconButton>
             <Avatar
+              onClick={() => handleNavigation('/profile')}
               sx={{
                 width: 28,
                 height: 28,
-                bgcolor: 'primary.main',
+                bgcolor: location.pathname === '/profile' ? 'primary.main' : 'text.secondary',
                 cursor: 'pointer',
+                border: location.pathname === '/profile' ? '2px solid' : 'none',
+                borderColor: 'primary.main',
               }}
             >
               U
