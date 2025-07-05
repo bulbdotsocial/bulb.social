@@ -28,11 +28,11 @@ let orbitdb;
 async function initOrbitDB() {
     libp2p = await createLibp2p({ ...Libp2pOptions })
     ipfs = await createHelia({ libp2p })
-    orbitdb = await createOrbitDB({ ipfs, directory: '/orbitdb-data' })
+    orbitdb = await createOrbitDB({ ipfs })
 
     // Create / Open a database. Defaults to db type "events".
     db = await orbitdb.open("bulb-social", { type: "documents" })
-    await db.load(); // Load the database
+
     await pinDatabase(); // <-- Pin after open
     // Listen for updates from peers
     db.events.on("update", async entry => {
