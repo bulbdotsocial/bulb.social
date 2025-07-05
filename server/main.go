@@ -127,7 +127,17 @@ func main() {
 			"orbit_hash": orbitResponse.Hash,
 			"db_address": orbitResponse.DBAddress,
 		})
+	})
 
+	router.GET("/api/v0/metadata", func(c *gin.Context) {
+		metadata, err := getFromOrbitDB()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		c.JSON(http.StatusOK, metadata)
 	})
 
 	s := &http.Server{
@@ -221,6 +231,34 @@ func pinIPFS(newFileName, completeNewPath string) (string, error) {
 type OrbitDBResponse struct {
 	Hash      string `json:"hash"`
 	DBAddress string `json:"db_address"`
+}
+
+type OrbitDBMetadata struct {
+	EntryHash string `json:"hash"`
+	Key       string `json:"key"`
+
+	Value Post `json:"value"`
+}
+
+func getFromOrbitDB() ([]OrbitDBMetadata, error) {
+	orbitdbApiUrl, err := url.JoinPath(orbitDBBaseURL, "/orbitdb/get-metadata")
+	if err != nil {
+		return nil, fmt.Errorf("failed to construct OrbitDB API URL: %w", err)
+	}
+	resp, err := http.Get(orbitdbApiUrl)
+	if err != nil {
+		return nil, fmt.Errorf("failed to contact OrbitDB: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("OrbitDB service returned status: %s", resp.Status)
+	}
+	var response []OrbitDBMetadata
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, fmt.Errorf("failed to decode OrbitDB response: %w", err)
+	}
+	fmt.Println("Retrieved metadata from OrbitDB:", response)
+	return response, nil
 }
 
 func storeInOrbitDB(postData Post) (*OrbitDBResponse, error) {

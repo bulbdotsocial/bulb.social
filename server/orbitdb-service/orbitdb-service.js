@@ -78,6 +78,21 @@ app.post('/orbitdb/add', async (req, res) => {
     }
 });
 
+app.get('/orbitdb/get-metadata', async (req, res) => {
+    try {
+        if (!db) {
+            console.error('OrbitDB not initialized');
+            return res.status(503).json({ error: 'OrbitDB not initialized' });
+        }
+        const all = await db.all()
+        console.log('Retrieved entries:', all);
+        res.json(all);
+    } catch (e) {
+        console.error('Error retrieving entries from OrbitDB:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 const PORT = 3000;
 let server = app.listen(PORT, async () => {
     try {
