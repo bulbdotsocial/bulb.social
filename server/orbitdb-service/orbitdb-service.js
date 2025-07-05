@@ -32,13 +32,30 @@ async function initOrbitDB() {
 
     // Create / Open a database. Defaults to db type "events".
     db = await orbitdb.open("bulb-social", { type: "documents" })
-
+    await pinDatabase(); // <-- Pin after open
     // Listen for updates from peers
     db.events.on("update", async entry => {
         console.log(entry)
         const all = await db.all()
         console.log(all)
     })
+}
+
+
+async function pinDatabase() {
+    if (!db || !ipfs) return;
+    // Get the current root CID of the database
+    const rootCID = db.head; // This is a CID object
+    if (!rootCID) {
+        console.error('No root CID (db.head) available to pin.');
+        return;
+    }
+    try {
+        await ipfs.pins.add(rootCID);
+        console.log("Pinned OrbitDB root CID: ", rootCID);
+    } catch (e) {
+        console.error('Error pinning OrbitDB root CID:', e);
+    }
 }
 
 app.post('/orbitdb/add', async (req, res) => {
@@ -52,6 +69,7 @@ app.post('/orbitdb/add', async (req, res) => {
             doc._id = randomUUID();
         }
         const entry = await db.put(doc);
+        await pinDatabase(); // <-- Pin after write
         console.log('Added entry:', entry);
         res.json({ hash: entry, db_address: db.address });
     } catch (e) {
