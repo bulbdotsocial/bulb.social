@@ -22,7 +22,7 @@ import (
     `unsafe`
 )
 
-type ValueType = int64
+type ValueType int
 type ParsingError uint
 type SearchingError uint
 
@@ -57,9 +57,6 @@ const (
     B_USE_NUMBER      = 1
     B_VALIDATE_STRING = 5
     B_ALLOW_CONTROL   = 31
-
-    // for native.SkipOne() flags
-    B_NO_VALIDATE_JSON= 6
 )
 
 const (

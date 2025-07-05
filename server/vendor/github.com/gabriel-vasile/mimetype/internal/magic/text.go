@@ -2,6 +2,7 @@ package magic
 
 import (
 	"bytes"
+	"strings"
 	"time"
 
 	"github.com/gabriel-vasile/mimetype/internal/charset"
@@ -153,75 +154,145 @@ func Php(raw []byte, limit uint32) bool {
 
 // JSON matches a JavaScript Object Notation file.
 func JSON(raw []byte, limit uint32) bool {
+	raw = trimLWS(raw)
 	// #175 A single JSON string, number or bool is not considered JSON.
 	// JSON objects and arrays are reported as JSON.
-	return jsonHelper(raw, limit, json.QueryNone, json.TokObject|json.TokArray)
+	if len(raw) < 2 || (raw[0] != '[' && raw[0] != '{') {
+		return false
+	}
+	parsed, err := json.Scan(raw)
+	// If the full file content was provided, check there is no error.
+	if limit == 0 || len(raw) < int(limit) {
+		return err == nil
+	}
+
+	// If a section of the file was provided, check if all of it was parsed.
+	return parsed == len(raw) && len(raw) > 0
 }
 
 // GeoJSON matches a RFC 7946 GeoJSON file.
 //
 // GeoJSON detection implies searching for key:value pairs like: `"type": "Feature"`
 // in the input.
+// BUG(gabriel-vasile): The "type" key should be searched for in the root object.
 func GeoJSON(raw []byte, limit uint32) bool {
-	return jsonHelper(raw, limit, json.QueryGeo, json.TokObject)
-}
-
-// HAR matches a HAR Spec file.
-// Spec: http://www.softwareishard.com/blog/har-12-spec/
-func HAR(raw []byte, limit uint32) bool {
-	return jsonHelper(raw, limit, json.QueryHAR, json.TokObject)
-}
-
-// GLTF matches a GL Transmission Format (JSON) file.
-// Visit [glTF specification] and [IANA glTF entry] for more details.
-//
-// [glTF specification]: https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html
-// [IANA glTF entry]: https://www.iana.org/assignments/media-types/model/gltf+json
-func GLTF(raw []byte, limit uint32) bool {
-	return jsonHelper(raw, limit, json.QueryGLTF, json.TokObject)
-}
-
-func jsonHelper(raw []byte, limit uint32, q string, wantTok int) bool {
-	if !json.LooksLikeObjectOrArray(raw) {
+	raw = trimLWS(raw)
+	if len(raw) == 0 {
 		return false
 	}
-	lraw := len(raw)
-	parsed, inspected, firstToken, querySatisfied := json.Parse(q, raw)
-	if !querySatisfied || firstToken&wantTok == 0 {
+	// GeoJSON is always a JSON object, not a JSON array or any other JSON value.
+	if raw[0] != '{' {
 		return false
 	}
 
-	// If the full file content was provided, check that the whole input was parsed.
-	if limit == 0 || lraw < int(limit) {
-		return parsed == lraw
+	s := []byte(`"type"`)
+	si, sl := bytes.Index(raw, s), len(s)
+
+	if si == -1 {
+		return false
 	}
 
-	// If a section of the file was provided, check if all of it was inspected.
-	// In other words, check that if there was a problem parsing, that problem
-	// occured at the last byte in the input.
-	return inspected == lraw && lraw > 0
+	// If the "type" string is the suffix of the input,
+	// there is no need to search for the value of the key.
+	if si+sl == len(raw) {
+		return false
+	}
+	// Skip the "type" part.
+	raw = raw[si+sl:]
+	// Skip any whitespace before the colon.
+	raw = trimLWS(raw)
+	// Check for colon.
+	if len(raw) == 0 || raw[0] != ':' {
+		return false
+	}
+	// Skip any whitespace after the colon.
+	raw = trimLWS(raw[1:])
+
+	geoJSONTypes := [][]byte{
+		[]byte(`"Feature"`),
+		[]byte(`"FeatureCollection"`),
+		[]byte(`"Point"`),
+		[]byte(`"LineString"`),
+		[]byte(`"Polygon"`),
+		[]byte(`"MultiPoint"`),
+		[]byte(`"MultiLineString"`),
+		[]byte(`"MultiPolygon"`),
+		[]byte(`"GeometryCollection"`),
+	}
+	for _, t := range geoJSONTypes {
+		if bytes.HasPrefix(raw, t) {
+			return true
+		}
+	}
+
+	return false
 }
 
 // NdJSON matches a Newline delimited JSON file. All complete lines from raw
 // must be valid JSON documents meaning they contain one of the valid JSON data
 // types.
 func NdJSON(raw []byte, limit uint32) bool {
-	lCount, objOrArr := 0, 0
+	lCount, hasObjOrArr := 0, false
 	raw = dropLastLine(raw, limit)
 	var l []byte
 	for len(raw) != 0 {
 		l, raw = scanLine(raw)
-		_, inspected, firstToken, _ := json.Parse(json.QueryNone, l)
-		if len(l) != inspected {
+		// Empty lines are allowed in NDJSON.
+		if l = trimRWS(trimLWS(l)); len(l) == 0 {
+			continue
+		}
+		_, err := json.Scan(l)
+		if err != nil {
 			return false
 		}
-		if firstToken == json.TokArray || firstToken == json.TokObject {
-			objOrArr++
+		if l[0] == '[' || l[0] == '{' {
+			hasObjOrArr = true
 		}
 		lCount++
 	}
 
-	return lCount > 1 && objOrArr > 0
+	return lCount > 1 && hasObjOrArr
+}
+
+// HAR matches a HAR Spec file.
+// Spec: http://www.softwareishard.com/blog/har-12-spec/
+func HAR(raw []byte, limit uint32) bool {
+	s := []byte(`"log"`)
+	si, sl := bytes.Index(raw, s), len(s)
+
+	if si == -1 {
+		return false
+	}
+
+	// If the "log" string is the suffix of the input,
+	// there is no need to search for the value of the key.
+	if si+sl == len(raw) {
+		return false
+	}
+	// Skip the "log" part.
+	raw = raw[si+sl:]
+	// Skip any whitespace before the colon.
+	raw = trimLWS(raw)
+	// Check for colon.
+	if len(raw) == 0 || raw[0] != ':' {
+		return false
+	}
+	// Skip any whitespace after the colon.
+	raw = trimLWS(raw[1:])
+
+	harJSONTypes := [][]byte{
+		[]byte(`"version"`),
+		[]byte(`"creator"`),
+		[]byte(`"entries"`),
+	}
+	for _, t := range harJSONTypes {
+		si := bytes.Index(raw, t)
+		if si > -1 {
+			return true
+		}
+	}
+
+	return false
 }
 
 // Svg matches a SVG file.
@@ -234,31 +305,32 @@ func Srt(raw []byte, _ uint32) bool {
 	line, raw := scanLine(raw)
 
 	// First line must be 1.
-	if len(line) != 1 || line[0] != '1' {
+	if string(line) != "1" {
 		return false
 	}
 	line, raw = scanLine(raw)
-	// Timestamp format (e.g: 00:02:16,612 --> 00:02:19,376) limits second line
+	secondLine := string(line)
+	// Timestamp format (e.g: 00:02:16,612 --> 00:02:19,376) limits secondLine
 	// length to exactly 29 characters.
-	if len(line) != 29 {
+	if len(secondLine) != 29 {
 		return false
 	}
 	// Decimal separator of fractional seconds in the timestamps must be a
 	// comma, not a period.
-	if bytes.IndexByte(line, '.') != -1 {
+	if strings.Contains(secondLine, ".") {
 		return false
 	}
-	sep := []byte(" --> ")
-	i := bytes.Index(line, sep)
-	if i == -1 {
+	// Second line must be a time range.
+	ts := strings.Split(secondLine, " --> ")
+	if len(ts) != 2 {
 		return false
 	}
 	const layout = "15:04:05,000"
-	t0, err := time.Parse(layout, string(line[:i]))
+	t0, err := time.Parse(layout, ts[0])
 	if err != nil {
 		return false
 	}
-	t1, err := time.Parse(layout, string(line[i+len(sep):]))
+	t1, err := time.Parse(layout, ts[1])
 	if err != nil {
 		return false
 	}

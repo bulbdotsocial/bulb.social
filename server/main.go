@@ -98,6 +98,18 @@ func main() {
 		// log the post data
 		postData.CreatedAt = time.Now()
 		// fmt.Printf("%#v\n", postData)
+		orbitResponse, err := storeInOrbitDB(postData)
+		if err != nil {
+			log.Println("Error storing in OrbitDB:", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to store in OrbitDB"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"message":    "Post stored in OrbitDB",
+			"orbit_hash": orbitResponse.Hash,
+			"db_address": orbitResponse.DBAddress,
+		})
+
 	})
 
 	s := &http.Server{
@@ -183,4 +195,36 @@ func pinIPFS(newFileName, completeNewPath string) (string, error) {
 	}
 
 	return ipfsResult.Hash, nil
+}
+
+type OrbitDBResponse struct {
+	Hash      string `json:"hash"`
+	DBAddress string `json:"db_address"`
+}
+
+func storeInOrbitDB(postData Post) (*OrbitDBResponse, error) {
+	orbitdbApiUrl := "http://localhost:3000/orbitdb/add"
+	jsonData, err := json.Marshal(postData)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := http.Post(orbitdbApiUrl, "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("OrbitDB service returned status: %s", resp.Status)
+	}
+	// reading the response body as json
+	var response OrbitDBResponse
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, fmt.Errorf("failed to decode OrbitDB response: %w", err)
+	}
+
+	if response.Hash == "" {
+		return nil, fmt.Errorf("OrbitDB response does not contain hash")
+	}
+	log.Printf("Stored in OrbitDB (%s) with hash: %s\n", response.DBAddress, response.Hash)
+	return &response, nil
 }
