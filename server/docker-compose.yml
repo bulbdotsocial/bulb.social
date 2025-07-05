@@ -26,8 +26,8 @@ services:
     #  - "3000:3000"
     environment:
       - NODE_ENV=production
-    depends_on:
-      - kubo
+  # depends_on:
+  #   - kubo
 
   go-server:
     build:
@@ -42,7 +42,7 @@ services:
       - IPFS_API_URL=http://localhost:5001
       - ORBITDB_API_URL=http://orbitdb:3000
     depends_on:
-      - kubo
+      # - kubo
       - orbitdb
 
 networks:
