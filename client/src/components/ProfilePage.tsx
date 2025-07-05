@@ -16,6 +16,7 @@ import {
   Divider,
   Chip,
   Skeleton,
+  Tooltip,
 } from '@mui/material';
 import {
   Settings as SettingsIcon,
@@ -34,7 +35,6 @@ interface ProfileData {
   postsCount: number;
   followersCount: number;
   followingCount: number;
-  isVerified: boolean;
   avatarUrl?: string;
 }
 
@@ -76,8 +76,10 @@ const ProfilePage: React.FC = () => {
     postsCount: 42,
     followersCount: 1247,
     followingCount: 324,
-    isVerified: true,
   };
+
+  // Check if user is verified (has ENS domain)
+  const isENSVerified = ensData.name && ensData.name.endsWith('.eth');
 
   // Mock posts data
   const userPosts: Post[] = [
@@ -264,29 +266,36 @@ const ProfilePage: React.FC = () => {
               >
                 {profileData.username}
               </Typography>
-              {profileData.isVerified && (
-                <Box
-                  sx={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: 22,
-                    height: 22,
-                    borderRadius: '50%',
-                    bgcolor: 'primary.main', // Use app's primary color (Instagram pink)
-                    color: 'white',
-                    ml: 1,
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                    flexShrink: 0, // Prevent badge from shrinking
-                  }}
+              {isENSVerified && (
+                <Tooltip 
+                  title="Verified ENS domain owner"
+                  placement="top"
+                  arrow
                 >
-                  <VerifiedIcon
+                  <Box
                     sx={{
-                      fontSize: '16px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 22,
+                      height: 22,
+                      borderRadius: '50%',
+                      bgcolor: 'primary.main', // Use app's primary color (Instagram pink)
                       color: 'white',
+                      ml: 1,
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                      flexShrink: 0, // Prevent badge from shrinking
+                      cursor: 'help',
                     }}
-                  />
-                </Box>
+                  >
+                    <VerifiedIcon
+                      sx={{
+                        fontSize: '16px',
+                        color: 'white',
+                      }}
+                    />
+                  </Box>
+                </Tooltip>
               )}
               <Button
                 variant="outlined"
