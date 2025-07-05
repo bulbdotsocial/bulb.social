@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLogout, usePrivy } from '@privy-io/react-auth';
 import { useLogo } from '../hooks/useLogo';
@@ -78,6 +78,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { logoSrc } = useLogo();
   const { mode, toggleTheme } = useThemeMode();
   
+  // Update PWA theme color based on current theme
+  useEffect(() => {
+    const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeColorMeta) {
+      // Use Instagram-like colors: pink for dark mode, white for light mode
+      const themeColor = mode === 'dark' ? '#E4405F' : '#FFFFFF';
+      themeColorMeta.setAttribute('content', themeColor);
+    }
+  }, [mode]);
+
   // Get ENS data for the user's wallet address
   const walletAddress = user?.wallet?.address;
   const ensData = useENS(walletAddress);
