@@ -56,6 +56,8 @@ import {
 import PWAInstallPrompt from './PWAInstallPrompt';
 import Camera from './Camera';
 import CropSelector from './CropSelector';
+import P2PStatus from './P2PStatus';
+import { useBulbDB } from '../hooks/useBulbDB';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -91,7 +93,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [description, setDescription] = useState('');
-  const [tags, settags] = useState('');
+  const [hashtags, setHashtags] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const theme = useTheme();
@@ -102,6 +104,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user } = usePrivy();
   const { logoSrc } = useLogo();
   const { mode, toggleTheme } = useThemeMode();
+  
+  // P2P Database hook
+  const { addPost, isReady: isDBReady } = useBulbDB();
   
   // Update PWA theme color based on current theme
   useEffect(() => {
@@ -237,10 +242,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         cid: cid,
         description: description.trim(),
         address: address,
-        tags: tags.split(' ').filter(tag => tag.trim().startsWith('#')),
+        tags: hashtags.split(' ').filter(tag => tag.trim().startsWith('#')),
         createdAt: new Date().toISOString(),
       };
       
+      // Write to traditional API
       const createPostResponse = await fetch('https://api.bulb.social/api/v0/create-post', {
         method: 'POST',
         mode: 'cors',
@@ -258,11 +264,31 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       const createPostResult: CreatePostResponse = await createPostResponse.json();
       console.log('Post created successfully:', createPostResult);
       
+      // Stage 3: Also write to P2P OrbitDB if ready
+      if (isDBReady) {
+        try {
+          // Convert PostData to BulbPost format for OrbitDB
+          const p2pPostData = {
+            imageCid: cid,
+            description: description.trim(),
+            walletAddress: address,
+            hashtags: hashtags.split(' ').filter(tag => tag.trim().startsWith('#')),
+            createdAt: new Date().toISOString(),
+          };
+          
+          await addPost(p2pPostData);
+          console.log('Post also added to P2P database');
+        } catch (error) {
+          console.warn('Failed to add post to P2P database:', error);
+          // Don't fail the entire operation if P2P fails
+        }
+      }
+      
       // Reset form and close dialog
       setSelectedImage(null);
       setImagePreview(null);
       setDescription('');
-      settags('');
+      setHashtags('');
       setUploadDialogOpen(false);
       
       // TODO: Show success message or refresh feed
@@ -281,7 +307,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     setSelectedImage(null);
     setImagePreview(null);
     setDescription('');
-    settags('');
+    setHashtags('');
     setUploadError(null);
     setIsUploading(false);
   };
@@ -520,6 +546,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
           {/* Right side - Action buttons */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {/* P2P Status Indicator */}
+            <P2PStatus />
+            
             {!isMobile && (
               <>
                 <IconButton 
@@ -817,12 +846,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {/* tags Input */}
           <TextField
             fullWidth
-            label="tags"
+            label="Hashtags"
             placeholder="#innovation #technology #bulb"
-            value={tags}
-            onChange={(e) => settags(e.target.value)}
+            value={hashtags}
+            onChange={(e) => setHashtags(e.target.value)}
             variant="outlined"
-            helperText="Add tags to reach more people"
+            helperText="Add hashtags to reach more people"
             disabled={isUploading}
           />
         </DialogContent>

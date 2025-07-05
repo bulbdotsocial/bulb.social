@@ -140,6 +140,7 @@ export default defineConfig({
         ]
       },
       workbox: {
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB limit instead of default 2MB
         globPatterns: [
           '**/*.{js,css,html,ico,png,svg}',
           'android/*.png',
@@ -180,6 +181,47 @@ export default defineConfig({
       },
     }),
   ],
+  // Node.js polyfills for browser compatibility
+  define: {
+    global: 'globalThis',
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+  },
+  resolve: {
+    alias: {
+      buffer: 'buffer',
+      process: 'process/browser',
+      stream: 'stream-browserify',
+      util: 'util',
+      events: 'events',
+      crypto: 'crypto-browserify',
+      path: 'path-browserify',
+      os: 'os-browserify/browser',
+      url: 'url',
+      assert: 'assert',
+      http: 'stream-http',
+      https: 'https-browserify',
+      zlib: 'browserify-zlib',
+      querystring: 'querystring-es3',
+    },
+  },
+  optimizeDeps: {
+    include: [
+      'buffer',
+      'process',
+      'stream-browserify',
+      'util',
+      'events',
+      'crypto-browserify',
+      'path-browserify',
+      'os-browserify/browser',
+      'url',
+      'assert',
+      'stream-http',
+      'https-browserify',
+      'browserify-zlib',
+      'querystring-es3',
+    ],
+  },
   server: {
     host: '0.0.0.0',
     port: 3000,
