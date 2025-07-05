@@ -113,6 +113,7 @@ const LoginPage: React.FC = () => {
                   color: 'text.primary',
                   mb: 1,
                   fontSize: { xs: '2.5rem', sm: '3rem' },
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
                 }}
               >
                 Bulb
@@ -126,7 +127,7 @@ const LoginPage: React.FC = () => {
                   fontSize: { xs: '1.5rem', sm: '1.75rem' },
                 }}
               >
-                Welcome to Web3 Social
+                Social Ideas Platform
               </Typography>
               <Typography
                 variant="body1"
