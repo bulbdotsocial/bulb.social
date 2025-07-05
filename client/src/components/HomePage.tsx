@@ -19,6 +19,7 @@ import {
   Add as AddIcon,
   TrendingUp as TrendingUpIcon,
 } from '@mui/icons-material';
+import P2PDebugCard from './P2PDebugCard';
 
 interface Idea {
   id: number;
@@ -37,41 +38,41 @@ const HomePage: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   // Mock data for ideas
-  const ideas: Idea[] = [
-    {
-      id: 1,
-      title: 'Solar-powered phone charger for hiking',
-      description: 'A lightweight, portable solar panel that can charge your phone during long hiking trips. Could be integrated into backpack straps.',
-      author: 'Alex Chen',
-      avatar: 'AC',
-      likes: 24,
-      comments: 8,
-      tags: ['Technology', 'Outdoor', 'Sustainability'],
-      timeAgo: '2h ago',
-    },
-    {
-      id: 2,
-      title: 'Community tool sharing app',
-      description: 'An app where neighbors can share tools and equipment they don\'t use often. Reduce waste and build community connections.',
-      author: 'Maria Rodriguez',
-      avatar: 'MR',
-      likes: 31,
-      comments: 12,
-      tags: ['Community', 'Sharing Economy', 'App Idea'],
-      timeAgo: '4h ago',
-    },
-    {
-      id: 3,
-      title: 'Smart plant care system',
-      description: 'IoT sensors that monitor soil moisture, light, and temperature for house plants, with automated watering and mobile notifications.',
-      author: 'David Kim',
-      avatar: 'DK',
-      likes: 18,
-      comments: 5,
-      tags: ['IoT', 'Plants', 'Smart Home'],
-      timeAgo: '6h ago',
-    },
-  ];
+    const ideas: Idea[] = [
+      {
+        id: 1,
+        title: 'Solar-powered phone charger for hiking',
+        description: 'A lightweight, portable solar panel that can charge your phone during long hiking trips. Could be integrated into backpack straps.',
+        author: 'Alex Chen',
+        avatar: 'AC',
+        likes: 24,
+        comments: 8,
+        tags: ['Technology', 'Outdoor', 'Sustainability'],
+        timeAgo: '2h ago',
+      },
+      {
+        id: 2,
+        title: 'Community tool sharing app',
+        description: 'An app where neighbors can share tools and equipment they don\'t use often. Reduce waste and build community connections.',
+        author: 'Maria Rodriguez',
+        avatar: 'MR',
+        likes: 31,
+        comments: 12,
+        tags: ['Community', 'Sharing Economy', 'App Idea'],
+        timeAgo: '4h ago',
+      },
+      {
+        id: 3,
+        title: 'Smart plant care system',
+        description: 'IoT sensors that monitor soil moisture, light, and temperature for house plants, with automated watering and mobile notifications.',
+        author: 'David Kim',
+        avatar: 'DK',
+        likes: 18,
+        comments: 5,
+        tags: ['IoT', 'Plants', 'Smart Home'],
+        timeAgo: '6h ago',
+      },
+    ];
 
   const IdeaCard: React.FC<{ idea: Idea }> = ({ idea }) => (
     <Card
@@ -199,12 +200,21 @@ const HomePage: React.FC = () => {
           {ideas.map((idea) => (
             <IdeaCard key={idea.id} idea={idea} />
           ))}
+          
+          {/* P2P Debug Card for Mobile */}
+          <Box sx={{ mt: 3, border: '2px dashed', borderColor: 'secondary.main', p: 2 }}>
+            <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
+              Debug Card Test (Screen: {isMobile ? 'Mobile' : 'Desktop'}):
+            </Typography>
+            <P2PDebugCard />
+          </Box>
         </Box>
 
         {/* Sidebar for larger screens */}
         {!isMobile && (
           <Box sx={{ flex: '1 1 0%', maxWidth: '300px' }}>
-            <Card sx={{ position: 'sticky', top: 80 }}>
+            {/* Trending Tags Card */}
+            <Card sx={{ position: 'sticky', top: 80, mb: 2 }}>
               <CardContent>
                 <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
                   🔥 Trending Tags
@@ -230,6 +240,12 @@ const HomePage: React.FC = () => {
                 </Box>
               </CardContent>
             </Card>
+
+            {/* P2P Debug Card */}
+            <Box sx={{ border: '2px dashed', borderColor: 'success.main', p: 2 }}>
+              <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>Desktop P2P Debug:</Typography>
+              <P2PDebugCard />
+            </Box>
           </Box>
         )}
       </Box>

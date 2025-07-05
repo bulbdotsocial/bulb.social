@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { useENS } from '../hooks/useENS';
+import P2PDebugCard from './P2PDebugCard';
 import {
   Box,
   Avatar,
@@ -194,15 +195,21 @@ const ProfilePage: React.FC = () => {
         pb: 4,
       }}
     >
+      {/* Main Container with Sidebar Layout */}
       <Box
         sx={{
-          maxWidth: 935,
+          maxWidth: 1200, // Increased to accommodate sidebar
           mx: 'auto',
           px: { xs: 2, sm: 3 },
           pt: { xs: 2, sm: 4 },
+          display: 'flex',
+          gap: 3,
+          flexDirection: { xs: 'column', lg: 'row' },
         }}
       >
-        {/* Profile Header */}
+        {/* Main Content */}
+        <Box sx={{ flex: 1, maxWidth: { lg: 935 } }}>
+          {/* Profile Header */}
         <Box
           sx={{
             display: 'flex',
@@ -512,6 +519,42 @@ const ProfilePage: React.FC = () => {
         <Box sx={{ mt: 2 }}>
           {currentTab === 0 && <PostGrid posts={userPosts} />}
           {currentTab === 1 && <PostGrid posts={savedPosts} />}
+        </Box>
+        </Box>
+
+        {/* Sidebar */}
+        <Box 
+          sx={{ 
+            width: { lg: 300 }, 
+            display: { xs: 'block', lg: 'block' },
+            mt: { xs: 4, lg: 0 }
+          }}
+        >
+          {/* Trending Tags Placeholder */}
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, fontSize: '1rem' }}>
+              Trending Tags
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+              {['#innovation', '#web3', '#blockchain', '#ai', '#startup'].map((tag) => (
+                <Chip
+                  key={tag}
+                  label={tag}
+                  size="small"
+                  variant="outlined"
+                  clickable
+                  sx={{
+                    '&:hover': {
+                      backgroundColor: 'action.hover',
+                    },
+                  }}
+                />
+              ))}
+            </Box>
+          </Box>
+
+          {/* P2P Debug Card */}
+          <P2PDebugCard />
         </Box>
       </Box>
     </Box>
