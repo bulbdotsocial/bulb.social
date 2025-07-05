@@ -41,9 +41,9 @@ services:
     environment:
       - IPFS_API_URL=http://kubo:5001
       - ORBITDB_API_URL=http://orbitdb:3000
-    depends_on:
-      # - kubo
-      - orbitdb
+# depends_on:
+#   # - kubo
+#   - orbitdb
 
 networks:
   app_network:
