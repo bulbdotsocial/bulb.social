@@ -112,8 +112,8 @@ const LoginPage: React.FC = () => {
                   fontWeight: 'bold',
                   color: 'text.primary',
                   mb: 1,
-                  fontSize: { xs: '2.5rem', sm: '3rem' },
-                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                  fontSize: { xs: '3rem', sm: '3.5rem' },
+                  fontFamily: '"Funnel Display", cursive',
                 }}
               >
                 Bulb

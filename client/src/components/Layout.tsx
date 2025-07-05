@@ -103,6 +103,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             sx={{ 
               fontWeight: 'bold',
               color: 'text.primary',
+              fontSize: '1.5rem',
+              fontFamily: '"Funnel Display", cursive',
             }}
           >
             Bulb
@@ -233,6 +235,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 sx={{
                   fontWeight: 'bold',
                   color: 'text.primary',
+                  fontSize: '1.5rem',
+                  fontFamily: '"Funnel Display", cursive',
                 }}
               >
                 Bulb
