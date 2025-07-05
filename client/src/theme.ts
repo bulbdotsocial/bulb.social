@@ -24,28 +24,29 @@ export const theme = createTheme({
   },
   typography: {
     fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    fontSize: 16, // Increase base font size from default 14px to 16px
     h4: {
       fontWeight: 600,
-      fontSize: '1.5rem',
+      fontSize: '1.75rem', // Increased from 1.5rem
     },
     h5: {
       fontWeight: 600,
-      fontSize: '1.25rem',
+      fontSize: '1.5rem', // Increased from 1.25rem
     },
     h6: {
       fontWeight: 600,
-      fontSize: '1.1rem',
+      fontSize: '1.25rem', // Increased from 1.1rem
     },
     body1: {
-      fontSize: '0.875rem',
-      lineHeight: 1.4,
+      fontSize: '1rem', // Increased from 0.875rem
+      lineHeight: 1.5, // Slightly increased line height for better readability
     },
     body2: {
-      fontSize: '0.75rem',
-      lineHeight: 1.3,
+      fontSize: '0.875rem', // Increased from 0.75rem
+      lineHeight: 1.4, // Increased from 1.3
     },
     caption: {
-      fontSize: '0.75rem',
+      fontSize: '0.875rem', // Increased from 0.75rem
       color: '#8e8e8e',
     },
   },

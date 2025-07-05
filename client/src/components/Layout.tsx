@@ -25,6 +25,17 @@ import {
   Skeleton,
   Menu,
   MenuItem,
+  SpeedDial,
+  SpeedDialAction,
+  SpeedDialIcon,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Button,
+  Card,
+  CardMedia,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -37,8 +48,12 @@ import {
   Logout as LogoutIcon,
   DarkMode as DarkModeIcon,
   LightMode as LightModeIcon,
+  PhotoLibrary as PhotoLibraryIcon,
+  CameraAlt as CameraAltIcon,
+  Close as CloseIcon,
 } from '@mui/icons-material';
 import PWAInstallPrompt from './PWAInstallPrompt';
+import Camera from './Camera';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -47,6 +62,13 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [speedDialOpen, setSpeedDialOpen] = useState(false);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [description, setDescription] = useState('');
+  const [hashtags, setHashtags] = useState('');
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
@@ -95,6 +117,73 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     setAnchorEl(null);
   };
 
+  // SpeedDial handlers
+  const handleCameraCapture = () => {
+    setCameraOpen(true);
+    setSpeedDialOpen(false);
+  };
+
+  // Handle camera photo capture
+  const handleCameraPhoto = (imageBlob: Blob) => {
+    // Convert blob to file
+    const file = new File([imageBlob], 'camera-photo.jpg', { type: 'image/jpeg' });
+    setSelectedImage(file);
+    
+    // Create preview URL
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreview(e.target?.result as string);
+      setUploadDialogOpen(true);
+    };
+    reader.readAsDataURL(file);
+    
+    setCameraOpen(false);
+  };
+
+  const handlePhotoLibrary = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (event) => {
+      const file = (event.target as HTMLInputElement).files?.[0];
+      if (file) {
+        setSelectedImage(file);
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setImagePreview(e.target?.result as string);
+          setUploadDialogOpen(true);
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    input.click();
+  };
+
+  const handlePostSubmit = () => {
+    if (selectedImage && description) {
+      console.log('Posting:', {
+        image: selectedImage,
+        description,
+        hashtags: hashtags.split(' ').filter(tag => tag.startsWith('#'))
+      });
+      
+      setSelectedImage(null);
+      setImagePreview(null);
+      setDescription('');
+      setHashtags('');
+      setUploadDialogOpen(false);
+    }
+  };
+
+  const handleDialogClose = () => {
+    setUploadDialogOpen(false);
+    setCameraOpen(false);
+    setSelectedImage(null);
+    setImagePreview(null);
+    setDescription('');
+    setHashtags('');
+  };
+
   const menuItems = [
     { text: 'Home', icon: <HomeIcon />, path: '/' },
     { text: 'Explore', icon: <ExploreIcon />, path: '/explore' },
@@ -113,7 +202,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       onClick={handleDrawerToggle}
     >
       <Box sx={{ p: 3, borderBottom: 1, borderColor: 'divider' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 1,
+            cursor: 'pointer',
+            '&:hover': {
+              opacity: 0.8,
+            },
+          }}
+          onClick={() => handleNavigation('/')}
+        >
           <img 
             src={logoSrc} 
             alt="Bulb" 
@@ -283,7 +383,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <MenuIcon />
               </IconButton>
             )}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 1,
+                cursor: 'pointer',
+                '&:hover': {
+                  opacity: 0.8,
+                },
+              }}
+              onClick={() => handleNavigation('/')}
+            >
               <img 
                 src={logoSrc} 
                 alt="Bulb" 
@@ -524,6 +635,163 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       {/* PWA Install Prompt */}
       <PWAInstallPrompt />
+
+      {/* Global SpeedDial for creating posts */}
+      <SpeedDial
+        ariaLabel="Create post options"
+        sx={{
+          position: 'fixed',
+          bottom: { xs: 80, sm: 32 },
+          right: { xs: 16, sm: 32 },
+          '& .MuiSpeedDial-fab': {
+            bgcolor: 'primary.main',
+            width: 64,
+            height: 64,
+            '&:hover': {
+              bgcolor: 'primary.dark',
+            },
+          },
+          '& .MuiSpeedDialIcon-root': {
+            transform: 'scale(1.2)', // Scale the icon to match larger button
+          },
+          '& .MuiSpeedDialIcon-icon': {
+            fontSize: '1.5rem',
+          },
+          '& .MuiSpeedDialIcon-openIcon': {
+            fontSize: '1.5rem',
+          },
+        }}
+        icon={<SpeedDialIcon />}
+        open={speedDialOpen}
+        onOpen={() => setSpeedDialOpen(true)}
+        onClose={() => setSpeedDialOpen(false)}
+      >
+        <SpeedDialAction
+          icon={<PhotoLibraryIcon />}
+          tooltipTitle="Photo Library"
+          onClick={handlePhotoLibrary}
+          sx={{
+            '& .MuiSpeedDialAction-fab': {
+              bgcolor: 'background.paper',
+              width: 48,
+              height: 48,
+              '&:hover': {
+                bgcolor: 'action.hover',
+              },
+            },
+            '& .MuiSvgIcon-root': {
+              fontSize: '1.25rem',
+            },
+          }}
+        />
+        <SpeedDialAction
+          icon={<CameraAltIcon />}
+          tooltipTitle="Camera"
+          onClick={handleCameraCapture}
+          sx={{
+            '& .MuiSpeedDialAction-fab': {
+              bgcolor: 'background.paper',
+              width: 48,
+              height: 48,
+              '&:hover': {
+                bgcolor: 'action.hover',
+              },
+            },
+            '& .MuiSvgIcon-root': {
+              fontSize: '1.25rem',
+            },
+          }}
+        />
+      </SpeedDial>
+
+      {/* Upload Dialog */}
+      <Dialog
+        open={uploadDialogOpen}
+        onClose={handleDialogClose}
+        maxWidth="sm"
+        fullWidth
+        sx={{
+          '& .MuiDialog-paper': {
+            borderRadius: 2,
+          },
+        }}
+      >
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h6">Create New Post</Typography>
+          <IconButton onClick={handleDialogClose} size="small">
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        
+        <DialogContent sx={{ pt: 1 }}>
+          {/* Image Preview */}
+          {imagePreview && (
+            <Box sx={{ mb: 3, textAlign: 'center' }}>
+              <Card sx={{ maxWidth: 400, mx: 'auto' }}>
+                <CardMedia
+                  component="img"
+                  image={imagePreview}
+                  alt="Selected image"
+                  sx={{
+                    maxHeight: 400,
+                    objectFit: 'contain',
+                  }}
+                />
+              </Card>
+            </Box>
+          )}
+
+          {/* Description Input */}
+          <TextField
+            fullWidth
+            multiline
+            rows={4}
+            label="Write a caption..."
+            placeholder="Share what's on your mind..."
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            sx={{ mb: 2 }}
+            variant="outlined"
+          />
+
+          {/* Hashtags Input */}
+          <TextField
+            fullWidth
+            label="Hashtags"
+            placeholder="#innovation #technology #bulb"
+            value={hashtags}
+            onChange={(e) => setHashtags(e.target.value)}
+            variant="outlined"
+            helperText="Add hashtags to reach more people"
+          />
+        </DialogContent>
+
+        <DialogActions sx={{ p: 3, pt: 1 }}>
+          <Button onClick={handleDialogClose} color="inherit">
+            Cancel
+          </Button>
+          <Button
+            onClick={handlePostSubmit}
+            variant="contained"
+            disabled={!selectedImage || !description.trim()}
+            sx={{
+              bgcolor: 'primary.main',
+              '&:hover': {
+                bgcolor: 'primary.dark',
+              },
+            }}
+          >
+            Share Post
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Camera Component */}
+      <Camera
+        open={cameraOpen}
+        onClose={() => setCameraOpen(false)}
+        onCapture={handleCameraPhoto}
+      />
     </Box>
   );
 };

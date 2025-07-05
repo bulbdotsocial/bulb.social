@@ -468,7 +468,7 @@ const ProfilePage: React.FC = () => {
               '& .MuiTabs-indicator': {
                 backgroundColor: 'text.primary',
                 height: 1,
-                top: 0,
+                bottom: 0,
               },
             }}
           >

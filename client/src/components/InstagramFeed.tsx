@@ -230,7 +230,7 @@ const InstagramFeed: React.FC = () => {
                 Trending Tags
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                {['Innovation', 'TechLife', 'Sustainability', 'IoT', 'Community', 'GreenTech'].map(
+                {['ETHcc', 'French Riviera', 'hackathon', 'Vitalik', 'Bullrun'].map(
                   (tag) => (
                     <Chip
                       key={tag}
