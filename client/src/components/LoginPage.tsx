@@ -96,20 +96,26 @@ const LoginPage: React.FC = () => {
           >
             {/* Logo and Title */}
             <Box sx={{ mb: 4 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                <img 
+                  src="/logo_app.png" 
+                  alt="Bulb" 
+                  style={{ 
+                    height: '80px', 
+                    width: 'auto' 
+                  }} 
+                />
+              </Box>
               <Typography
                 variant="h3"
                 sx={{
-                  fontFamily: 'cursive',
                   fontWeight: 'bold',
-                  background: 'linear-gradient(45deg, #E4405F, #405DE6, #833AB4)',
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
+                  color: 'text.primary',
                   mb: 1,
-                  fontSize: { xs: '2rem', sm: '2.5rem' },
+                  fontSize: { xs: '2.5rem', sm: '3rem' },
                 }}
               >
-                💡 Bulb
+                Bulb
               </Typography>
               <Typography
                 variant="h5"
@@ -117,7 +123,7 @@ const LoginPage: React.FC = () => {
                   color: 'text.primary',
                   fontWeight: 600,
                   mb: 1,
-                  fontSize: { xs: '1.25rem', sm: '1.5rem' },
+                  fontSize: { xs: '1.5rem', sm: '1.75rem' },
                 }}
               >
                 Welcome to Web3 Social
@@ -125,7 +131,11 @@ const LoginPage: React.FC = () => {
               <Typography
                 variant="body1"
                 color="text.secondary"
-                sx={{ mb: 3 }}
+                sx={{ 
+                  mb: 3,
+                  fontSize: { xs: '1.1rem', sm: '1rem' },
+                  lineHeight: 1.6,
+                }}
               >
                 Share ideas, connect with creators, and own your content in the decentralized future
               </Typography>
@@ -139,8 +149,8 @@ const LoginPage: React.FC = () => {
                 size="large"
                 fullWidth
                 sx={{
-                  py: 1.5,
-                  fontSize: '1.1rem',
+                  py: 2,
+                  fontSize: { xs: '1.2rem', sm: '1.1rem' },
                   fontWeight: 600,
                   borderRadius: 3,
                   background: 'linear-gradient(45deg, #E4405F, #405DE6)',
@@ -152,7 +162,11 @@ const LoginPage: React.FC = () => {
               >
                 Connect Wallet to Continue
               </Button>
-              <Typography variant="caption" color="text.secondary">
+              <Typography 
+                variant="caption" 
+                color="text.secondary"
+                sx={{ fontSize: { xs: '0.9rem', sm: '0.75rem' } }}
+              >
                 New to Web3? We'll create a wallet for you automatically
               </Typography>
             </Box>
@@ -188,11 +202,19 @@ const LoginPage: React.FC = () => {
                   <Box sx={{ flex: 1 }}>
                     <Typography
                       variant="subtitle2"
-                      sx={{ fontWeight: 600, mb: 0.5 }}
+                      sx={{ 
+                        fontWeight: 600, 
+                        mb: 0.5,
+                        fontSize: { xs: '1rem', sm: '0.875rem' },
+                      }}
                     >
                       {feature.title}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary"
+                      sx={{ fontSize: { xs: '0.95rem', sm: '0.875rem' } }}
+                    >
                       {feature.description}
                     </Typography>
                   </Box>
@@ -202,7 +224,11 @@ const LoginPage: React.FC = () => {
 
             {/* Footer */}
             <Box sx={{ mt: 4, pt: 3, borderTop: 1, borderColor: 'divider' }}>
-              <Typography variant="caption" color="text.secondary">
+              <Typography 
+                variant="caption" 
+                color="text.secondary"
+                sx={{ fontSize: { xs: '0.85rem', sm: '0.75rem' } }}
+              >
                 By connecting, you agree to our Terms of Service and Privacy Policy
               </Typography>
             </Box>
@@ -211,12 +237,20 @@ const LoginPage: React.FC = () => {
 
         {/* Bottom Text */}
         <Box sx={{ textAlign: 'center', mt: 3 }}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography 
+            variant="body2" 
+            color="text.secondary"
+            sx={{ fontSize: { xs: '0.95rem', sm: '0.875rem' } }}
+          >
             Powered by{' '}
             <Typography
               component="span"
               variant="body2"
-              sx={{ color: 'primary.main', fontWeight: 600 }}
+              sx={{ 
+                color: 'primary.main', 
+                fontWeight: 600,
+                fontSize: { xs: '0.95rem', sm: '0.875rem' },
+              }}
             >
               Privy
             </Typography>{' '}

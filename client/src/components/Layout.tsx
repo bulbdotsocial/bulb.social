@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLogout, usePrivy } from '@privy-io/react-auth';
+import { useLogo } from '../hooks/useLogo';
 import {
   AppBar,
   Toolbar,
@@ -44,6 +45,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const { logout } = useLogout();
   const { user } = usePrivy();
+  const { logoSrc } = useLogo();
 
   const handleDrawerToggle = () => {
     setDrawerOpen(!drawerOpen);
@@ -81,19 +83,25 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       onClick={handleDrawerToggle}
     >
       <Box sx={{ p: 3, borderBottom: 1, borderColor: 'divider' }}>
-        <Typography 
-          variant="h5" 
-          sx={{ 
-            fontFamily: 'cursive',
-            fontWeight: 'bold',
-            background: 'linear-gradient(45deg, #E4405F, #405DE6, #833AB4)',
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-          }}
-        >
-          💡 Bulb
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <img 
+            src={logoSrc} 
+            alt="Bulb" 
+            style={{ 
+              height: '32px', 
+              width: 'auto'
+            }} 
+          />
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              fontWeight: 'bold',
+              color: 'text.primary',
+            }}
+          >
+            Bulb
+          </Typography>
+        </Box>
       </Box>
       
       {/* Search on mobile */}
@@ -203,22 +211,27 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <MenuIcon />
               </IconButton>
             )}
-            <Typography
-              variant="h5"
-              noWrap
-              component="div"
-              sx={{
-                fontFamily: 'cursive',
-                fontWeight: 'bold',
-                color: 'text.primary',
-                background: 'linear-gradient(45deg, #E4405F, #405DE6, #833AB4)',
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
-            >
-              💡 Bulb
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <img 
+                src={logoSrc} 
+                alt="Bulb" 
+                style={{ 
+                  height: '28px', 
+                  width: 'auto'
+                }} 
+              />
+              <Typography
+                variant="h6"
+                noWrap
+                component="div"
+                sx={{
+                  fontWeight: 'bold',
+                  color: 'text.primary',
+                }}
+              >
+                Bulb
+              </Typography>
+            </Box>
           </Box>
 
           {/* Center - Search bar on desktop */}
