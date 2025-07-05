@@ -24,29 +24,29 @@ export const theme = createTheme({
   },
   typography: {
     fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-    fontSize: 16, // Increase base font size from default 14px to 16px
+    fontSize: 18, // Increase base font size from 16px to 18px for better readability
     h4: {
       fontWeight: 600,
-      fontSize: '1.75rem', // Increased from 1.5rem
+      fontSize: '2rem', // Increased from 1.75rem
     },
     h5: {
       fontWeight: 600,
-      fontSize: '1.5rem', // Increased from 1.25rem
+      fontSize: '1.75rem', // Increased from 1.5rem
     },
     h6: {
       fontWeight: 600,
-      fontSize: '1.25rem', // Increased from 1.1rem
+      fontSize: '1.5rem', // Increased from 1.25rem
     },
     body1: {
-      fontSize: '1rem', // Increased from 0.875rem
-      lineHeight: 1.5, // Slightly increased line height for better readability
+      fontSize: '1.125rem', // Increased from 1rem (18px)
+      lineHeight: 1.5, // Good line height for readability
     },
     body2: {
-      fontSize: '0.875rem', // Increased from 0.75rem
-      lineHeight: 1.4, // Increased from 1.3
+      fontSize: '1rem', // Increased from 0.875rem (16px)
+      lineHeight: 1.4, 
     },
     caption: {
-      fontSize: '0.875rem', // Increased from 0.75rem
+      fontSize: '1rem', // Increased from 0.875rem (16px)
       color: '#8e8e8e',
     },
   },
@@ -76,6 +76,7 @@ export const theme = createTheme({
           textTransform: 'none',
           fontWeight: 600,
           borderRadius: 4,
+          fontSize: '1.125rem', // Larger font size for buttons
         },
         contained: {
           boxShadow: 'none',
@@ -89,6 +90,47 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+        },
+      },
+    },
+    MuiTypography: {
+      styleOverrides: {
+        root: {
+          fontSize: '1.125rem', // Ensure all typography uses larger font size
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          '& .MuiInputBase-input': {
+            fontSize: '1.125rem', // Larger font size for input fields
+          },
+          '& .MuiInputLabel-root': {
+            fontSize: '1.125rem', // Larger font size for input labels
+          },
+        },
+      },
+    },
+    MuiTab: {
+      styleOverrides: {
+        root: {
+          fontSize: '1.125rem', // Larger font size for tabs
+          fontWeight: 600,
+        },
+      },
+    },
+    MuiMenuItem: {
+      styleOverrides: {
+        root: {
+          fontSize: '1.125rem', // Larger font size for menu items
+        },
+      },
+    },
+    MuiListItemText: {
+      styleOverrides: {
+        primary: {
+          fontSize: '1.125rem', // Larger font size for list items
         },
       },
     },

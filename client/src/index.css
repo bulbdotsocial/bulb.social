@@ -9,8 +9,8 @@ html, body {
   font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-size: 14px; /* Instagram uses 14px base font size */
-  line-height: 1.4;
+  font-size: 16px; /* Increased from 14px for better readability */
+  line-height: 1.5;
 }
 
 body {

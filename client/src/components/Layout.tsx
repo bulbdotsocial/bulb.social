@@ -62,10 +62,10 @@ interface LayoutProps {
 }
 
 interface PostData {
-  imageCid: string;
+  cid: string;
   description: string;
-  walletAddress: string;
-  hashtags: string[];
+  address: string;
+  tags: string[];
   createdAt: string;
 }
 
@@ -91,7 +91,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [description, setDescription] = useState('');
-  const [hashtags, setHashtags] = useState('');
+  const [tags, settags] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const theme = useTheme();
@@ -114,8 +114,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   }, [mode]);
 
   // Get ENS data for the user's wallet address
-  const walletAddress = user?.wallet?.address;
-  const ensData = useENS(walletAddress);
+  const address = user?.wallet?.address;
+  const ensData = useENS(address);
 
   const handleDrawerToggle = () => {
     setDrawerOpen(!drawerOpen);
@@ -201,7 +201,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const handlePostSubmit = async () => {
     if (!selectedImage || !description.trim()) return;
     
-    if (!walletAddress) {
+    if (!address) {
       setUploadError('No wallet address found. Please connect your wallet.');
       return;
     }
@@ -217,6 +217,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       const uploadResponse = await fetch('https://api.bulb.social/api/v0/upload-pic', {
         method: 'POST',
         body: formData,
+        mode: 'cors',
+        credentials: 'omit',
       });
       
       if (!uploadResponse.ok) {
@@ -224,23 +226,25 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       }
       
       const uploadResult: UploadResponse = await uploadResponse.json();
-      const imageCid = uploadResult.cid;
+      const cid = uploadResult.cid;
       
-      if (!imageCid) {
+      if (!cid) {
         throw new Error('No CID returned from image upload');
       }
       
       // Stage 2: Create post with metadata
       const postData: PostData = {
-        imageCid: imageCid,
+        cid: cid,
         description: description.trim(),
-        walletAddress: walletAddress,
-        hashtags: hashtags.split(' ').filter(tag => tag.trim().startsWith('#')),
+        address: address,
+        tags: tags.split(' ').filter(tag => tag.trim().startsWith('#')),
         createdAt: new Date().toISOString(),
       };
       
       const createPostResponse = await fetch('https://api.bulb.social/api/v0/create-post', {
         method: 'POST',
+        mode: 'cors',
+        credentials: 'omit',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -258,7 +262,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       setSelectedImage(null);
       setImagePreview(null);
       setDescription('');
-      setHashtags('');
+      settags('');
       setUploadDialogOpen(false);
       
       // TODO: Show success message or refresh feed
@@ -277,7 +281,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     setSelectedImage(null);
     setImagePreview(null);
     setDescription('');
-    setHashtags('');
+    settags('');
     setUploadError(null);
     setIsUploading(false);
   };
@@ -810,15 +814,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             disabled={isUploading}
           />
 
-          {/* Hashtags Input */}
+          {/* tags Input */}
           <TextField
             fullWidth
-            label="Hashtags"
+            label="tags"
             placeholder="#innovation #technology #bulb"
-            value={hashtags}
-            onChange={(e) => setHashtags(e.target.value)}
+            value={tags}
+            onChange={(e) => settags(e.target.value)}
             variant="outlined"
-            helperText="Add hashtags to reach more people"
+            helperText="Add tags to reach more people"
             disabled={isUploading}
           />
         </DialogContent>

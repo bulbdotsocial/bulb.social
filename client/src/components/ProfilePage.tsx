@@ -22,6 +22,7 @@ import {
   GridOn as GridOnIcon,
   BookmarkBorder as BookmarkIcon,
   AccountBalanceWallet as WalletIcon,
+  Verified as VerifiedIcon,
   // ContentCopy as CopyIcon,
 } from '@mui/icons-material';
 
@@ -265,13 +266,26 @@ const ProfilePage: React.FC = () => {
               </Typography>
               {profileData.isVerified && (
                 <Box
-                  component="span"
                   sx={{
-                    color: 'primary.main',
-                    fontSize: '1.2rem',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 22,
+                    height: 22,
+                    borderRadius: '50%',
+                    bgcolor: 'primary.main', // Use app's primary color (Instagram pink)
+                    color: 'white',
+                    ml: 1,
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                    flexShrink: 0, // Prevent badge from shrinking
                   }}
                 >
-                  ✓
+                  <VerifiedIcon
+                    sx={{
+                      fontSize: '16px',
+                      color: 'white',
+                    }}
+                  />
                 </Box>
               )}
               <Button
