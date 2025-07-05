@@ -17,6 +17,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -57,6 +58,14 @@ func main() {
 	router := gin.Default()
 	// Set a lower memory limit for multipart forms (default is 32 MiB)
 	// router.MaxMultipartMemory = 8 << 20
+
+	// CORS configuration
+	// Allow only POST requests from https://bulb.social
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"https://bulb.social"}
+	config.AllowMethods = []string{"POST"}
+
+	router.Use(cors.New(config))
 
 	// 1st request, gets the image, sends it to IPFS, and returns the CID
 	router.POST("/api/v0/upload-pic", func(c *gin.Context) {
