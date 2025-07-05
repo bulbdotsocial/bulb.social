@@ -36,6 +36,17 @@ createRoot(document.getElementById('root')!).render(
           ethereum: {
             createOnLogin: 'users-without-wallets'
           }
+        },
+        // Add domain configuration for CSP
+        loginMethods: ['wallet', 'email', 'sms'],
+        appearance: {
+          theme: 'light',
+          accentColor: '#E4405F',
+        },
+        // Ensure proper domain handling
+        legal: {
+          termsAndConditionsUrl: '',
+          privacyPolicyUrl: '',
         }
       }}
     >
