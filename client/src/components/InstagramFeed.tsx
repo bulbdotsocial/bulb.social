@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import ENSUser from './ENSUser';
 import {
   Box,
@@ -13,6 +13,8 @@ import {
   useMediaQuery,
   Chip,
   Paper,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import {
   FavoriteBorder as FavoriteBorderIcon,
@@ -24,65 +26,116 @@ import {
 } from '@mui/icons-material';
 
 interface Post {
-  id: number;
-  address: string; // Ethereum address
-  location?: string;
-  imageUrl: string;
-  likes: number;
-  isLiked: boolean;
-  caption: string;
-  comments: number;
-  timeAgo: string;
+  id: string;
+  hash: string;
+  cid: string;
+  address: string;
+  description: string;
+  created_at: string;
   tags: string[];
+  private: boolean;
+  imageUrl: string; // Généré à partir du CID
+  likes: number; // Mock data pour l'instant
+  isLiked: boolean; // Mock data pour l'instant
+  comments: number; // Mock data pour l'instant
+  timeAgo: string; // Calculé à partir de created_at
+}
+
+interface ApiItem {
+  hash: string;
+  key: string;
+  value: {
+    cid: string;
+    description: string;
+    address: string;
+    created_at: string;
+    tags: string[];
+    private: boolean;
+  };
 }
 
 const InstagramFeed: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  // Mock data for posts with Ethereum addresses
-  const posts: Post[] = [
-    {
-      id: 1,
-      address: '0x742d35Cc8B78cBA66b6c3e42F7a6e1E1E1c3A0aD', // Random address for demo
-      location: 'San Francisco, CA',
-      imageUrl: 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=400&h=400&fit=crop',
-      likes: 127,
-      isLiked: false,
-      caption: '☀️ Solar-powered innovation! Just finished prototyping this portable charger that uses flexible solar panels. Perfect for hiking adventures! 🏔️ #SolarTech #Innovation #Sustainability #TechLife',
-      comments: 8,
-      timeAgo: '2 hours ago',
-      tags: ['SolarTech', 'Innovation', 'Sustainability', 'TechLife'],
-    },
-    {
-      id: 2,
-      address: '0x8ba1f109551bD432803012645Hac136c27598C45', // Random address for demo
-      location: 'Austin, TX',
-      imageUrl: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop',
-      likes: 89,
-      isLiked: true,
-      caption: '🏠 Community vibes! Working on an app concept that lets neighbors share tools and equipment. Building stronger communities one tool at a time! 🔨 #Community #SharingEconomy #AppDesign',
-      comments: 12,
-      timeAgo: '4 hours ago',
-      tags: ['Community', 'SharingEconomy', 'AppDesign'],
-    },
-    {
-      id: 3,
-      address: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984', // UNI token address for demo
-      location: 'Seattle, WA',
-      imageUrl: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=400&fit=crop',
-      likes: 234,
-      isLiked: false,
-      caption: '🌱 Smart plant care system in action! IoT sensors monitoring my plants while I focus on coding. Technology meets nature 🌿 #IoT #SmartHome #PlantTech #GreenTech',
-      comments: 15,
-      timeAgo: '6 hours ago',
-      tags: ['IoT', 'SmartHome', 'PlantTech', 'GreenTech'],
-    },
-  ];
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fonction pour calculer le temps écoulé
+  const getTimeAgo = (dateString: string): string => {
+    try {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffInMs = now.getTime() - date.getTime();
+      const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+      const diffInHours = Math.floor(diffInMinutes / 60);
+      const diffInDays = Math.floor(diffInHours / 24);
+
+      if (diffInMinutes < 60) {
+        return `${diffInMinutes}m`;
+      } else if (diffInHours < 24) {
+        return `${diffInHours}h`;
+      } else {
+        return `${diffInDays}d`;
+      }
+    } catch {
+      return 'Unknown';
+    }
+  };
+
+  // Fonction pour générer l'URL de l'image à partir du CID
+  const getImageUrl = (cid: string): string => {
+    // Adaptez cette URL selon votre gateway IPFS
+    return `https://ipfs.io/ipfs/${cid}`;
+  };
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('https://api.bulb.social/api/v0/metadata');
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data: ApiItem[] = await response.json();
+
+        // Transformez les données de l'API en format Post
+        const transformedPosts: Post[] = data
+          .filter(item => !item.value.private) // Filtrer les posts privés
+          .map((item: ApiItem) => ({
+            id: item.key,
+            hash: item.hash,
+            cid: item.value.cid,
+            address: item.value.address,
+            description: item.value.description,
+            created_at: item.value.created_at,
+            tags: item.value.tags,
+            private: item.value.private,
+            imageUrl: getImageUrl(item.value.cid),
+            likes: Math.floor(Math.random() * 200), // Mock data - à remplacer par de vraies données
+            isLiked: false, // Mock data - à remplacer par de vraies données
+            comments: Math.floor(Math.random() * 20), // Mock data - à remplacer par de vraies données
+            timeAgo: getTimeAgo(item.value.created_at),
+          }));
+
+        setPosts(transformedPosts);
+      } catch (err) {
+        console.error('Error fetching posts:', err);
+        setError(err instanceof Error ? err.message : 'An error occurred while fetching posts');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, []);
 
   const PostCard: React.FC<{ post: Post }> = ({ post }) => (
-    <Card 
-      sx={{ 
+    <Card
+      sx={{
         maxWidth: 468,
         mx: 'auto',
         mb: 3,
@@ -99,10 +152,22 @@ const InstagramFeed: React.FC = () => {
         }
         title=""
         subheader={
-          post.location && (
-            <Typography variant="caption" color="text.secondary">
-              {post.location}
-            </Typography>
+          post.tags.length > 0 && (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
+              {post.tags.slice(0, 3).map((tag) => (
+                <Chip
+                  key={tag}
+                  label={`#${tag}`}
+                  size="small"
+                  sx={{
+                    height: 18,
+                    fontSize: '0.6rem',
+                    bgcolor: 'primary.50',
+                    color: 'primary.main',
+                  }}
+                />
+              ))}
+            </Box>
           )
         }
         sx={{ pb: 1 }}
@@ -112,10 +177,14 @@ const InstagramFeed: React.FC = () => {
       <CardMedia
         component="img"
         image={post.imageUrl}
-        alt={`Post by ${post.address}`}
+        alt={post.description}
         sx={{
           aspectRatio: '1/1',
           objectFit: 'cover',
+        }}
+        onError={(e) => {
+          // Fallback en cas d'erreur de chargement d'image
+          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=400&h=400&fit=crop';
         }}
       />
 
@@ -150,9 +219,9 @@ const InstagramFeed: React.FC = () => {
 
         {/* Caption */}
         <Box sx={{ mb: 1 }}>
-          <ENSUser 
-            address={post.address} 
-            showAvatar={false} 
+          <ENSUser
+            address={post.address}
+            showAvatar={false}
             typography="body2"
           />
           <Typography
@@ -161,7 +230,7 @@ const InstagramFeed: React.FC = () => {
             color="text.primary"
             sx={{ ml: 1 }}
           >
-            {post.caption}
+            {post.description}
           </Typography>
         </Box>
 
@@ -184,14 +253,42 @@ const InstagramFeed: React.FC = () => {
     </Card>
   );
 
+  if (loading) {
+    return (
+      <Box sx={{
+        minHeight: '100vh',
+        bgcolor: 'background.default',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{
+        minHeight: '100vh',
+        bgcolor: 'background.default',
+        p: 3,
+      }}>
+        <Alert severity="error" sx={{ maxWidth: 468, mx: 'auto' }}>
+          {error}
+        </Alert>
+      </Box>
+    );
+  }
+
   return (
-    <Box sx={{ 
+    <Box sx={{
       minHeight: '100vh',
       bgcolor: 'background.default',
       py: { xs: 2, sm: 3 },
     }}>
-      <Box sx={{ 
-        display: 'flex', 
+      <Box sx={{
+        display: 'flex',
         justifyContent: 'center',
         gap: 4,
         maxWidth: 975,
@@ -199,18 +296,24 @@ const InstagramFeed: React.FC = () => {
         px: { xs: 0, sm: 2 },
       }}>
         {/* Main Feed */}
-        <Box sx={{ 
+        <Box sx={{
           flex: 1,
           maxWidth: 468,
         }}>
-          {posts.map((post) => (
-            <PostCard key={post.id} post={post} />
-          ))}
+          {posts.length === 0 ? (
+            <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', mt: 4 }}>
+              No posts available
+            </Typography>
+          ) : (
+            posts.map((post) => (
+              <PostCard key={post.id} post={post} />
+            ))
+          )}
         </Box>
 
         {/* Sidebar for larger screens */}
         {!isMobile && (
-          <Box sx={{ 
+          <Box sx={{
             width: 293,
             pt: 2,
           }}>
@@ -230,8 +333,10 @@ const InstagramFeed: React.FC = () => {
                 Trending Tags
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                {['ETHcc', 'French Riviera', 'hackathon', 'Vitalik', 'Bullrun'].map(
-                  (tag) => (
+                {posts.flatMap(post => post.tags)
+                  .filter((tag, index, arr) => arr.indexOf(tag) === index)
+                  .slice(0, 10)
+                  .map((tag) => (
                     <Chip
                       key={tag}
                       label={`#${tag}`}
@@ -247,8 +352,7 @@ const InstagramFeed: React.FC = () => {
                         },
                       }}
                     />
-                  )
-                )}
+                  ))}
               </Box>
             </Paper>
           </Box>
