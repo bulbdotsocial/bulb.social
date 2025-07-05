@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useLogout, usePrivy } from '@privy-io/react-auth';
 import { useLogo } from '../hooks/useLogo';
 import { useENS } from '../hooks/useENS';
+import { useThemeMode } from '../contexts/ThemeContext';
 import {
   AppBar,
   Toolbar,
@@ -32,6 +33,8 @@ import {
   Person as PersonIcon,
   Add as AddIcon,
   Logout as LogoutIcon,
+  DarkMode as DarkModeIcon,
+  LightMode as LightModeIcon,
 } from '@mui/icons-material';
 import PWAInstallPrompt from './PWAInstallPrompt';
 
@@ -48,6 +51,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { logout } = useLogout();
   const { user } = usePrivy();
   const { logoSrc } = useLogo();
+  const { mode, toggleTheme } = useThemeMode();
   
   // Get ENS data for the user's wallet address
   const walletAddress = user?.wallet?.address;
@@ -94,7 +98,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             src={logoSrc} 
             alt="Bulb" 
             style={{ 
-              height: '32px', 
+              height: '48px', 
               width: 'auto'
             }} 
           />
@@ -103,7 +107,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             sx={{ 
               fontWeight: 'bold',
               color: 'text.primary',
-              fontSize: '1.5rem',
+              fontSize: '2rem',
               fontFamily: '"Funnel Display", cursive',
             }}
           >
@@ -120,15 +124,20 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             p: '8px 16px',
             display: 'flex',
             alignItems: 'center',
-            bgcolor: '#fafafa',
-            border: '1px solid #dbdbdb',
+            bgcolor: theme.palette.mode === 'light' ? '#fafafa' : 'background.paper',
+            border: `1px solid ${theme.palette.divider}`,
             borderRadius: 8,
           }}
           elevation={0}
         >
-          <SearchIcon sx={{ color: '#8e8e8e', mr: 1 }} />
+          <SearchIcon sx={{ color: 'text.secondary', mr: 1 }} />
           <InputBase
-            sx={{ ml: 1, flex: 1, fontSize: '0.875rem' }}
+            sx={{ 
+              ml: 1, 
+              flex: 1, 
+              fontSize: '0.875rem',
+              color: 'text.primary',
+            }}
             placeholder="Search"
             inputProps={{ 'aria-label': 'search' }}
           />
@@ -165,6 +174,32 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         
         <Divider sx={{ my: 1 }} />
         
+        {/* Theme toggle option */}
+        <ListItem 
+          onClick={toggleTheme}
+          sx={{
+            cursor: 'pointer',
+            py: 1.5,
+            px: 3,
+            '&:hover': {
+              bgcolor: 'action.hover',
+            },
+          }}
+        >
+          <ListItemIcon sx={{ color: 'text.primary', minWidth: 40 }}>
+            {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
+          </ListItemIcon>
+          <ListItemText 
+            primary={mode === 'dark' ? 'Light Mode' : 'Dark Mode'}
+            primaryTypographyProps={{
+              fontWeight: 400,
+              fontSize: '1rem',
+            }}
+          />
+        </ListItem>
+        
+        <Divider sx={{ my: 1 }} />
+        
         {/* Logout option */}
         <ListItem 
           onClick={handleLogout}
@@ -198,10 +233,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         position="fixed"
         sx={{
           zIndex: theme.zIndex.drawer + 1,
-          bgcolor: 'background.paper',
-          color: 'text.primary',
-          borderBottom: 1,
-          borderColor: 'divider',
+          // Force transparent background with !important
+          bgcolor: `${theme.palette.mode === 'light' 
+            ? 'rgba(255, 255, 255, 0.9)' 
+            : 'rgba(18, 18, 18, 0.9)'} !important`,
+          backgroundColor: `${theme.palette.mode === 'light' 
+            ? 'rgba(255, 255, 255, 0.9)' 
+            : 'rgba(18, 18, 18, 0.9)'} !important`,
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          borderBottom: `1px solid ${theme.palette.mode === 'light' 
+            ? 'rgba(219, 219, 219, 0.5)' 
+            : 'rgba(51, 51, 51, 0.5)'}`,
+          boxShadow: 'none',
         }}
         elevation={0}
       >
@@ -235,7 +279,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 sx={{
                   fontWeight: 'bold',
                   color: 'text.primary',
-                  fontSize: '1.5rem',
+                  fontSize: '2rem',
                   fontFamily: '"Funnel Display", cursive',
                 }}
               >
@@ -253,18 +297,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 display: 'flex',
                 alignItems: 'center',
                 width: 268,
-                bgcolor: '#fafafa',
-                border: '1px solid #dbdbdb',
+                bgcolor: theme.palette.mode === 'light' ? '#fafafa' : 'background.paper',
+                border: `1px solid ${theme.palette.divider}`,
                 borderRadius: 8,
                 '&:focus-within': {
-                  borderColor: '#8e8e8e',
+                  borderColor: theme.palette.text.secondary,
                 },
               }}
               elevation={0}
             >
-              <SearchIcon sx={{ color: '#8e8e8e', mr: 1 }} />
+              <SearchIcon sx={{ color: 'text.secondary', mr: 1 }} />
               <InputBase
-                sx={{ ml: 1, flex: 1, fontSize: '0.875rem' }}
+                sx={{ 
+                  ml: 1, 
+                  flex: 1, 
+                  fontSize: '0.875rem',
+                  color: 'text.primary',
+                }}
                 placeholder="Search"
                 inputProps={{ 'aria-label': 'search' }}
               />
@@ -307,6 +356,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </IconButton>
               </>
             )}
+            
+            {/* Theme toggle button */}
+            <IconButton 
+              color="inherit" 
+              aria-label="toggle theme"
+              onClick={toggleTheme}
+              sx={{
+                color: 'text.primary',
+              }}
+            >
+              {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
+            </IconButton>
+            
             <IconButton 
               color="primary" 
               aria-label="add post"

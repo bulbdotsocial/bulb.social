@@ -187,7 +187,7 @@ const PWAInstallPrompt: React.FC = () => {
           <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
             Install Bulb App
           </Typography>
-          <Typography variant="caption" sx={{ fontSize: '0.75rem' }}>
+          <Typography variant="caption" sx={{ fontSize: '0.75rem', color: 'white' }}>
             Add to your home screen for the best experience
           </Typography>
         </Box>

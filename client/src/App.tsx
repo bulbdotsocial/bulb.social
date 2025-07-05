@@ -1,6 +1,6 @@
-import { ThemeProvider, CssBaseline } from '@mui/material';
+import { CssBaseline } from '@mui/material';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { theme } from './theme';
+import { CustomThemeProvider } from './contexts/ThemeContext';
 import Layout from './components/Layout';
 import InstagramFeed from './components/InstagramFeed';
 import ProfilePage from './components/ProfilePage';
@@ -9,7 +9,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
+    <CustomThemeProvider>
       <CssBaseline />
       <Router>
         <Routes>
@@ -34,7 +34,7 @@ function App() {
           />
         </Routes>
       </Router>
-    </ThemeProvider>
+    </CustomThemeProvider>
   );
 }
 
