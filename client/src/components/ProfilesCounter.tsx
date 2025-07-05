@@ -75,7 +75,7 @@ const ProfilesCounter: React.FC<ProfilesCounterProps> = ({ variant = 'card' }) =
               </IconButton>
             </Tooltip>
             <Tooltip title="Refresh">
-              <IconButton size="small" onClick={refetch} disabled={isLoading}>
+              <IconButton size="small" onClick={() => refetch()} disabled={isLoading}>
                 <RefreshIcon fontSize="small" />
               </IconButton>
             </Tooltip>
