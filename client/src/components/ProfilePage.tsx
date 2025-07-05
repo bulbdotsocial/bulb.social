@@ -22,7 +22,7 @@ import {
   GridOn as GridOnIcon,
   BookmarkBorder as BookmarkIcon,
   AccountBalanceWallet as WalletIcon,
-  ContentCopy as CopyIcon,
+  // ContentCopy as CopyIcon,
 } from '@mui/icons-material';
 
 interface ProfileData {

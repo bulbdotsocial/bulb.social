@@ -23,6 +23,8 @@ import {
   Paper,
   Divider,
   Skeleton,
+  Menu,
+  MenuItem,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -44,6 +46,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
@@ -70,9 +73,26 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const handleLogout = () => {
     logout();
+    // Navigate to login page after logout
+    navigate('/login');
     if (isMobile) {
       setDrawerOpen(false);
     }
+    // Close user menu if open
+    setAnchorEl(null);
+  };
+
+  const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleUserMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleProfileClick = () => {
+    handleNavigation('/profile');
+    setAnchorEl(null);
   };
 
   const menuItems = [
@@ -393,7 +413,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               />
             ) : (
               <Avatar
-                onClick={() => handleNavigation('/profile')}
+                onClick={isMobile ? () => handleNavigation('/profile') : handleUserMenuOpen}
                 src={ensData.avatar || undefined}
                 sx={{
                   width: 28,
@@ -415,6 +435,51 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </Box>
         </Toolbar>
       </AppBar>
+
+      {/* User Menu Dropdown */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleUserMenuClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        sx={{
+          mt: 1,
+          '& .MuiPaper-root': {
+            bgcolor: 'background.paper',
+            border: `1px solid ${theme.palette.divider}`,
+            borderRadius: 2,
+            minWidth: 180,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          },
+        }}
+      >
+        <MenuItem onClick={handleProfileClick}>
+          <ListItemIcon sx={{ color: 'text.primary' }}>
+            <PersonIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary="Profile" />
+        </MenuItem>
+        <MenuItem onClick={toggleTheme}>
+          <ListItemIcon sx={{ color: 'text.primary' }}>
+            {mode === 'dark' ? <LightModeIcon fontSize="small" /> : <DarkModeIcon fontSize="small" />}
+          </ListItemIcon>
+          <ListItemText primary={mode === 'dark' ? 'Light Mode' : 'Dark Mode'} />
+        </MenuItem>
+        <Divider />
+        <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
+          <ListItemIcon sx={{ color: 'error.main' }}>
+            <LogoutIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary="Disconnect" />
+        </MenuItem>
+      </Menu>
 
       <Drawer
         variant={isMobile ? 'temporary' : 'temporary'}
