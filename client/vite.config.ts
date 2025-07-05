@@ -180,9 +180,11 @@ export default defineConfig({
   ],
   server: {
     host: '0.0.0.0',
-    port: 5173,
+    port: 3000,
     headers: {
-      'Content-Security-Policy': "frame-ancestors 'self' https://auth.privy.io"
+      'Cross-Origin-Embedder-Policy': 'unsafe-none',
+      'Cross-Origin-Opener-Policy': 'unsafe-none',
+      'Content-Security-Policy': "frame-ancestors 'self' https://auth.privy.io; frame-src 'self' https://auth.privy.io https://*.privy.io"
     }
   },
 })
