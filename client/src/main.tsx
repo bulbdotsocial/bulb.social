@@ -3,10 +3,11 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 
-import {PrivyProvider} from '@privy-io/react-auth';
+import { PrivyProvider } from '@privy-io/react-auth';
 
 // Import or define your chain objects here
-import {base, berachain, polygon, arbitrum, story, mantle} from 'viem/chains';
+import { base, berachain, polygon, arbitrum, story, mantle } from 'viem/chains';
+import { FLOW_TESTNET } from './config/contract';
 
 // Register service worker for PWA functionality
 if ('serviceWorker' in navigator) {
@@ -30,7 +31,7 @@ createRoot(document.getElementById('root')!).render(
         // Replace this with your desired default chain
         defaultChain: base,
         // Replace this with a list of your desired supported chains
-        supportedChains: [base, berachain, polygon, arbitrum, story, mantle],
+        supportedChains: [base, berachain, polygon, arbitrum, story, mantle, FLOW_TESTNET],
         // Create embedded wallets for users who don't have a wallet
         embeddedWallets: {
           ethereum: {

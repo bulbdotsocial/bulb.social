@@ -27,7 +27,7 @@ import {
 import { usePrivy } from '@privy-io/react-auth';
 import { useENS } from '../hooks/useENS';
 import { useBulbFactory, invalidateProfileCache } from '../hooks/useBulbFactory';
-import { useContractWrite, type CreateProfileParams } from '../hooks/useContractWrite';
+import { useWalletContract, type CreateProfileParams } from '../hooks/useWalletContract';
 
 interface CreateProfileDialogProps {
   open: boolean;
@@ -44,7 +44,7 @@ const CreateProfileDialog: React.FC<CreateProfileDialogProps> = ({
   const userAddress = user?.wallet?.address;
   const ensData = useENS(userAddress);
   const { checkUserProfile, refetch } = useBulbFactory();
-  const { createProfile, isLoading, error } = useContractWrite();
+  const { createProfile, isLoading, error } = useWalletContract();
 
   // Form state
   const [activeStep, setActiveStep] = useState(0);
@@ -129,17 +129,17 @@ const CreateProfileDialog: React.FC<CreateProfileDialogProps> = ({
     try {
       const txHash = await createProfile(formData, userAddress as `0x${string}`);
       console.log('Profile created with transaction:', txHash);
-      
+
       // Invalidate the profile cache for this user to ensure fresh data
       invalidateProfileCache(userAddress);
-      
+
       // Refresh the profiles data
       await refetch();
-      
+
       if (onSuccess) {
         onSuccess(txHash);
       }
-      
+
       handleClose();
     } catch (error) {
       console.error('Failed to create profile:', error);
@@ -205,7 +205,7 @@ const CreateProfileDialog: React.FC<CreateProfileDialogProps> = ({
             <Typography variant="h6" sx={{ mb: 3 }}>
               Profile Information
             </Typography>
-            
+
             {/* ENS Info */}
             {ensData.name && (
               <Alert severity="info" sx={{ mb: 3 }}>
@@ -263,7 +263,7 @@ const CreateProfileDialog: React.FC<CreateProfileDialogProps> = ({
             <Typography variant="h6" sx={{ mb: 3 }}>
               Monetization Setup
             </Typography>
-            
+
             <Card sx={{ mb: 3 }}>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -284,7 +284,7 @@ const CreateProfileDialog: React.FC<CreateProfileDialogProps> = ({
 
             <Alert severity="info" sx={{ mb: 2 }}>
               <Typography variant="body2">
-                <strong>Transaction Required:</strong> Creating your profile requires a blockchain transaction on Flow testnet. 
+                <strong>Transaction Required:</strong> Creating your profile requires a blockchain transaction on Flow testnet.
                 Make sure you have some FLOW tokens for gas fees.
               </Typography>
             </Alert>
@@ -354,13 +354,13 @@ const CreateProfileDialog: React.FC<CreateProfileDialogProps> = ({
             <Button onClick={handleClose} disabled={isLoading}>
               Cancel
             </Button>
-            
+
             {activeStep > 0 && activeStep < steps.length - 1 && (
               <Button onClick={handleBack} disabled={isLoading}>
                 Back
               </Button>
             )}
-            
+
             {activeStep === 0 && !hasExistingProfile ? (
               <Button onClick={handleNext} variant="contained">
                 Get Started
