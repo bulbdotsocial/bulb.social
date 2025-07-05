@@ -1,0 +1,16 @@
+{
+    "name": "orbitdb-service",
+    "version": "1.0.0",
+    "main": "orbitdb-service.js",
+    "type": "module",
+    "scripts": {
+        "start": "node orbitdb-service.js"
+    },
+    "dependencies": {
+        "@chainsafe/libp2p-gossipsub": "^14.1.1",
+        "@orbitdb/core": "^2.5.0",
+        "express": "^5.1.0",
+        "helia": "^5.4.2",
+        "it-drain": "^3.0.10"
+    }
+}

@@ -6,6 +6,7 @@ import { createOrbitDB } from '@orbitdb/core'
 import { gossipsub } from "@chainsafe/libp2p-gossipsub";
 import { identify } from "@libp2p/identify";
 import { createLibp2p } from 'libp2p'
+import { randomUUID } from 'crypto'; // Node.js >= 14.17
 
 const Libp2pOptions = {
     services: {
@@ -30,7 +31,7 @@ async function initOrbitDB() {
     orbitdb = await createOrbitDB({ ipfs })
 
     // Create / Open a database. Defaults to db type "events".
-    db = await orbitdb.open("bulb-social", { type: "docstore" })
+    db = await orbitdb.open("bulb-social", { type: "documents" })
 
     // Listen for updates from peers
     db.events.on("update", async entry => {
@@ -46,7 +47,11 @@ app.post('/orbitdb/add', async (req, res) => {
             console.error('OrbitDB not initialized');
             return res.status(503).json({ error: 'OrbitDB not initialized' });
         }
-        const entry = await db.put(req.body);
+        let doc = req.body;
+        if (!doc._id) {
+            doc._id = randomUUID();
+        }
+        const entry = await db.put(doc);
         console.log('Added entry:', entry);
         res.json({ hash: entry, db_address: db.address });
     } catch (e) {
