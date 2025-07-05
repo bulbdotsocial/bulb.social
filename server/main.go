@@ -10,6 +10,7 @@ import (
 	"mime/multipart"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -32,7 +33,13 @@ type Post struct {
 const defaultPort = "80"
 const projectName = "bulb.social"
 
-var tmpDir string
+var (
+	tmpDir string
+	// http://kubo:5001
+	ipfsBaseURL string
+	// http://orbitdb:3000
+	orbitDBBaseURL string
+)
 
 func init() {
 	var err error
@@ -40,6 +47,8 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+	ipfsBaseURL = os.Getenv("IPFS_API_URL")
+	orbitDBBaseURL = os.Getenv("ORBITDB_API_URL")
 }
 
 func main() {
@@ -160,7 +169,10 @@ type ipfsResp struct {
 
 func pinIPFS(newFileName, completeNewPath string) (string, error) {
 	// --- Send file to IPFS via RPC (HTTP API) ---
-	ipfsApiUrl := "http://127.0.0.1:5001/api/v0/add"
+	ipfsApiUrl, err := url.JoinPath(ipfsBaseURL, "/api/v0/add")
+	if err != nil {
+		return "", fmt.Errorf("failed to construct IPFS API URL: %w", err)
+	}
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 	part, err := writer.CreateFormFile("file", newFileName)
@@ -203,7 +215,10 @@ type OrbitDBResponse struct {
 }
 
 func storeInOrbitDB(postData Post) (*OrbitDBResponse, error) {
-	orbitdbApiUrl := "http://localhost:3000/orbitdb/add"
+	orbitdbApiUrl, err := url.JoinPath(orbitDBBaseURL, "/orbitdb/add")
+	if err != nil {
+		return nil, fmt.Errorf("failed to construct OrbitDB API URL: %w", err)
+	}
 	jsonData, err := json.Marshal(postData)
 	if err != nil {
 		return nil, err
