@@ -44,7 +44,6 @@ import {
   Explore as ExploreIcon,
   FavoriteBorder as FavoriteBorderIcon,
   Person as PersonIcon,
-  Add as AddIcon,
   Logout as LogoutIcon,
   DarkMode as DarkModeIcon,
   LightMode as LightModeIcon,
@@ -219,7 +218,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             gap: 1,
             cursor: 'pointer',
             '&:hover': {
-              opacity: 0.8,
+              opacity: 0.6,
             },
           }}
           onClick={() => handleNavigation('/')}
@@ -363,18 +362,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         position="fixed"
         sx={{
           zIndex: theme.zIndex.drawer + 1,
-          // Force transparent background with !important
+          // Force transparent background with !important - increased transparency
           bgcolor: `${theme.palette.mode === 'light' 
-            ? 'rgba(255, 255, 255, 0.9)' 
-            : 'rgba(18, 18, 18, 0.9)'} !important`,
+            ? 'rgba(255, 255, 255, 0.75)' 
+            : 'rgba(18, 18, 18, 0.75)'} !important`,
           backgroundColor: `${theme.palette.mode === 'light' 
-            ? 'rgba(255, 255, 255, 0.9)' 
-            : 'rgba(18, 18, 18, 0.9)'} !important`,
+            ? 'rgba(255, 255, 255, 0.75)' 
+            : 'rgba(18, 18, 18, 0.75)'} !important`,
           backdropFilter: 'blur(10px)',
           WebkitBackdropFilter: 'blur(10px)',
           borderBottom: `1px solid ${theme.palette.mode === 'light' 
-            ? 'rgba(219, 219, 219, 0.5)' 
-            : 'rgba(51, 51, 51, 0.5)'}`,
+            ? 'rgba(219, 219, 219, 0.4)' 
+            : 'rgba(51, 51, 51, 0.4)'}`,
           boxShadow: 'none',
         }}
         elevation={0}
@@ -400,7 +399,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 gap: 1,
                 cursor: 'pointer',
                 '&:hover': {
-                  opacity: 0.8,
+                  opacity: 0.6,
                 },
               }}
               onClick={() => handleNavigation('/')}
@@ -510,21 +509,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
             </IconButton>
             
-            <IconButton 
-              color="primary" 
-              aria-label="add post"
-              sx={{
-                bgcolor: 'primary.main',
-                color: 'white',
-                '&:hover': {
-                  bgcolor: 'primary.dark',
-                },
-                width: 32,
-                height: 32,
-              }}
-            >
-              <AddIcon fontSize="small" />
-            </IconButton>
             {ensData.isLoading ? (
               <Skeleton
                 variant="circular"

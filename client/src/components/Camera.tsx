@@ -23,102 +23,68 @@ interface CameraProps {
 const Camera: React.FC<CameraProps> = ({ open, onClose, onCapture }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<string>('');
-  const [loading, setLoading] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
-  const [videoLoaded, setVideoLoaded] = useState(false);
 
-  // Start camera
-  const startCamera = async (currentFacingMode: 'user' | 'environment') => {
-    console.log('Starting camera with facing mode:', currentFacingMode);
+  const startCamera = async () => {
+    console.log('Starting camera...');
+    console.log(`URL: ${window.location.href}`);
+    console.log(`Secure context: ${window.isSecureContext}`);
     
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setError('Camera not supported on this device');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-    setVideoLoaded(false);
-
     try {
-      // Stop existing stream first
-      if (streamRef.current) {
-        console.log('Stopping existing stream');
-        streamRef.current.getTracks().forEach(track => track.stop());
-        streamRef.current = null;
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error('getUserMedia not supported');
       }
 
-      const constraints: MediaStreamConstraints = {
+      console.log('Requesting camera access...');
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: currentFacingMode,
-          width: { ideal: 1920, max: 1920 },
-          height: { ideal: 1080, max: 1080 },
-        },
-        audio: false,
-      };
+          facingMode: facingMode,
+          width: { ideal: 1280 },
+          height: { ideal: 1280 } // Square aspect ratio
+        }
+      });
 
-      console.log('Requesting media with constraints:', constraints);
-      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-      console.log('Got media stream:', mediaStream);
-      
-      streamRef.current = mediaStream;
+      console.log(`Got stream with ${mediaStream.getTracks().length} tracks`);
+      setStream(mediaStream);
 
       if (videoRef.current) {
-        console.log('Setting video source');
+        console.log('Setting stream to video element...');
         videoRef.current.srcObject = mediaStream;
         
-        // Add event listeners for video events
         videoRef.current.onloadedmetadata = () => {
-          console.log('Video metadata loaded');
-          setVideoLoaded(true);
+          console.log(`Video metadata loaded: ${videoRef.current?.videoWidth}x${videoRef.current?.videoHeight}`);
+          setVideoReady(true);
         };
-        
-        videoRef.current.oncanplay = () => {
-          console.log('Video can play');
-        };
-        
-        videoRef.current.onplaying = () => {
-          console.log('Video is playing');
-        };
-        
+
         try {
           await videoRef.current.play();
-          console.log('Video play started successfully');
+          console.log('Video started playing');
         } catch (playError) {
-          console.error('Video play error:', playError);
-          // Handle AbortError gracefully - expected when switching cameras
-          if (playError instanceof Error && playError.name === 'AbortError') {
-            console.log('Video play was interrupted, likely due to camera switch');
-          } else {
-            console.log('Video play error:', playError);
-          }
+          console.log(`Play error: ${playError}`);
         }
       }
-    } catch (err: unknown) {
-      console.error('Error accessing camera:', err);
-      let errorMessage = 'Failed to access camera';
-      
-      if (err instanceof Error) {
-        if (err.name === 'NotAllowedError') {
-          errorMessage = 'Camera access denied. Please allow camera permissions and try again.';
-        } else if (err.name === 'NotFoundError') {
-          errorMessage = 'No camera found on this device.';
-        } else if (err.name === 'NotSupportedError') {
-          errorMessage = 'Camera not supported on this device.';
-        } else if (err.name === 'AbortError') {
-          // Handle the AbortError gracefully - it's expected when switching cameras
-          console.log('Camera start was aborted, likely due to camera switch');
-          return;
-        }
-      }
-      
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
+
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      console.log(`Error: ${message}`);
+      setError(message);
     }
+  };
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setVideoReady(false);
+    console.log('Camera stopped');
   };
 
   // Get available devices
@@ -136,22 +102,17 @@ const Camera: React.FC<CameraProps> = ({ open, onClose, onCapture }) => {
   const toggleCamera = () => {
     const newFacingMode = facingMode === 'user' ? 'environment' : 'user';
     setFacingMode(newFacingMode);
+    stopCamera();
+    setTimeout(() => startCamera(), 100);
   };
 
   // Handle dialog close
   const handleClose = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-    setVideoLoaded(false);
+    stopCamera();
     onClose();
   };
 
-  // Capture photo
+  // Capture photo from current video frame
   const capturePhoto = () => {
     if (!videoRef.current || !canvasRef.current) return;
 
@@ -161,14 +122,23 @@ const Camera: React.FC<CameraProps> = ({ open, onClose, onCapture }) => {
 
     if (!context) return;
 
-    // Set canvas dimensions to match video
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    // Calculate square dimensions
+    const minDimension = Math.min(video.videoWidth, video.videoHeight);
+    const xOffset = (video.videoWidth - minDimension) / 2;
+    const yOffset = (video.videoHeight - minDimension) / 2;
 
-    // Draw the video frame to canvas
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    // Set canvas to square dimensions
+    canvas.width = minDimension;
+    canvas.height = minDimension;
 
-    // Convert canvas to blob
+    // Capture square crop from center of video stream
+    context.drawImage(
+      video,
+      xOffset, yOffset, minDimension, minDimension, // Source rectangle (square crop from center)
+      0, 0, minDimension, minDimension // Destination rectangle (full canvas)
+    );
+
+    // Convert captured frame to high-quality JPEG
     canvas.toBlob((blob) => {
       if (blob) {
         onCapture(blob);
@@ -177,32 +147,19 @@ const Camera: React.FC<CameraProps> = ({ open, onClose, onCapture }) => {
     }, 'image/jpeg', 0.9);
   };
 
-  // Effect for when dialog opens/closes
   useEffect(() => {
     if (open) {
+      setError('');
       getAvailableDevices();
-      startCamera(facingMode);
+      startCamera();
     } else {
-      // Cleanup when dialog closes
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-        streamRef.current = null;
-      }
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
-      }
-      setVideoLoaded(false);
+      stopCamera();
     }
 
-    // Cleanup function
     return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-        streamRef.current = null;
-      }
-      setVideoLoaded(false);
+      stopCamera();
     };
-  }, [open, facingMode]); // Include facingMode to restart camera when it changes
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Dialog
@@ -258,7 +215,7 @@ const Camera: React.FC<CameraProps> = ({ open, onClose, onCapture }) => {
           </IconButton>
         )}
 
-        {/* Video stream */}
+        {/* Video stream container */}
         <Box
           sx={{
             position: 'relative',
@@ -270,31 +227,13 @@ const Camera: React.FC<CameraProps> = ({ open, onClose, onCapture }) => {
             bgcolor: 'black',
           }}
         >
-          {loading && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-              <CircularProgress sx={{ color: 'white' }} />
-              <Typography variant="body2" sx={{ color: 'white' }}>
-                Starting camera...
-              </Typography>
-            </Box>
-          )}
-
           {error && (
             <Alert severity="error" sx={{ m: 2, maxWidth: 400 }}>
               {error}
             </Alert>
           )}
 
-          {!loading && !error && !videoLoaded && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-              <CircularProgress sx={{ color: 'white' }} />
-              <Typography variant="body2" sx={{ color: 'white' }}>
-                Loading video stream...
-              </Typography>
-            </Box>
-          )}
-
-          {!loading && !error && (
+          {!error && (
             <>
               <video
                 ref={videoRef}
@@ -305,19 +244,21 @@ const Camera: React.FC<CameraProps> = ({ open, onClose, onCapture }) => {
                   width: '100%',
                   height: '100%',
                   objectFit: 'cover',
-                  display: videoLoaded ? 'block' : 'none',
+                  display: videoReady ? 'block' : 'none',
                 }}
               />
 
-              {/* Show debug info */}
-              {!videoLoaded && (
-                <Typography variant="caption" sx={{ color: 'white', position: 'absolute', top: 60 }}>
-                  Video stream: {streamRef.current ? 'Connected' : 'Not connected'}
-                </Typography>
+              {!videoReady && (
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                  <CircularProgress sx={{ color: 'white' }} />
+                  <Typography variant="body2" sx={{ color: 'white' }}>
+                    Starting camera...
+                  </Typography>
+                </Box>
               )}
 
-              {/* Capture button - only show when video is loaded */}
-              {videoLoaded && (
+              {/* Capture button - only show when video is ready */}
+              {videoReady && (
                 <IconButton
                   onClick={capturePhoto}
                   sx={{
