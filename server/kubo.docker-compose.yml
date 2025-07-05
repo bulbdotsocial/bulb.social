@@ -14,6 +14,19 @@ services:
       - IPFS_PROFILE=server
     command: daemon --migrate=true --agent-version-suffix=docker
 
+  orbitdb:
+    build:
+      context: ./orbitdb-service
+    container_name: orbitdb
+    networks:
+      - app_network
+    #ports:
+    #  - "3000:3000"
+    environment:
+      - NODE_ENV=production
+  depends_on:
+    - kubo
+
 networks:
   app_network:
     name: app_network
