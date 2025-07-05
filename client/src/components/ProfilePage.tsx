@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { useENS } from '../hooks/useENS';
+import { useBulbFactory } from '../hooks/useBulbFactory';
+import CreateProfileDialog from './CreateProfileDialog';
 import {
   Box,
   Avatar,
@@ -17,6 +19,7 @@ import {
   Chip,
   Skeleton,
   Tooltip,
+  CircularProgress,
 } from '@mui/material';
 import {
   Settings as SettingsIcon,
@@ -24,6 +27,7 @@ import {
   BookmarkBorder as BookmarkIcon,
   AccountBalanceWallet as WalletIcon,
   Verified as VerifiedIcon,
+  Star as ExclusiveIcon,
   // ContentCopy as CopyIcon,
 } from '@mui/icons-material';
 
@@ -49,11 +53,39 @@ const ProfilePage: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [currentTab, setCurrentTab] = useState(0);
+  const [createProfileOpen, setCreateProfileOpen] = useState(false);
   const { user } = usePrivy();
   
   // Get ENS data for the user's wallet address
   const walletAddress = user?.wallet?.address;
   const ensData = useENS(walletAddress);
+  
+  // Check if user has an exclusive profile
+  const { checkUserProfile } = useBulbFactory();
+  const [hasExclusiveProfile, setHasExclusiveProfile] = useState<boolean | null>(null);
+  const [checkingProfile, setCheckingProfile] = useState(false);
+
+  // Check for exclusive profile on mount and when wallet changes
+  const checkProfile = useCallback(async () => {
+    if (walletAddress) {
+      setCheckingProfile(true);
+      try {
+        const { hasProfile } = await checkUserProfile(walletAddress as `0x${string}`);
+        setHasExclusiveProfile(hasProfile);
+      } catch (error) {
+        console.error('Error checking exclusive profile:', error);
+        setHasExclusiveProfile(false);
+      } finally {
+        setCheckingProfile(false);
+      }
+    } else {
+      setHasExclusiveProfile(null);
+    }
+  }, [walletAddress, checkUserProfile]);
+
+  useEffect(() => {
+    checkProfile();
+  }, [checkProfile]);
 
   // Copy address to clipboard
   const handleCopyAddress = async () => {
@@ -297,21 +329,57 @@ const ProfilePage: React.FC = () => {
                   </Box>
                 </Tooltip>
               )}
-              <Button
-                variant="outlined"
-                size="small"
-                sx={{
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  borderColor: 'divider',
-                  color: 'text.primary',
-                  '&:hover': {
-                    borderColor: 'text.secondary',
-                  },
-                }}
-              >
-                Edit profile
-              </Button>
+              {/* Profile Action Button */}
+              {checkingProfile ? (
+                <Button
+                  variant="outlined"
+                  size="small"
+                  disabled
+                  startIcon={<CircularProgress size={16} />}
+                  sx={{
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    borderColor: 'divider',
+                    color: 'text.primary',
+                  }}
+                >
+                  Checking...
+                </Button>
+              ) : hasExclusiveProfile === false ? (
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={() => setCreateProfileOpen(true)}
+                  startIcon={<ExclusiveIcon />}
+                  sx={{
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    background: 'linear-gradient(45deg, #6B7280, #374151)',
+                    color: 'white',
+                    '&:hover': {
+                      background: 'linear-gradient(45deg, #4B5563, #1F2937)',
+                    },
+                  }}
+                >
+                  Create Exclusive Profile
+                </Button>
+              ) : (
+                <Button
+                  variant="outlined"
+                  size="small"
+                  sx={{
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    borderColor: 'divider',
+                    color: 'text.primary',
+                    '&:hover': {
+                      borderColor: 'text.secondary',
+                    },
+                  }}
+                >
+                  Edit Profile
+                </Button>
+              )}
               <IconButton size="small">
                 <SettingsIcon />
               </IconButton>
@@ -514,6 +582,19 @@ const ProfilePage: React.FC = () => {
           {currentTab === 1 && <PostGrid posts={savedPosts} />}
         </Box>
       </Box>
+
+      {/* Create Exclusive Profile Dialog */}
+      <CreateProfileDialog
+        open={createProfileOpen}
+        onClose={() => setCreateProfileOpen(false)}
+        onSuccess={(profileAddress) => {
+          console.log('Exclusive profile created at:', profileAddress);
+          setHasExclusiveProfile(true);
+          setCreateProfileOpen(false);
+          // Refresh profile check to ensure cache is updated
+          checkProfile();
+        }}
+      />
     </Box>
   );
 };

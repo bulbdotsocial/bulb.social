@@ -39,6 +39,7 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
+import ProfilesCounter from './ProfilesCounter';
 import {
   Menu as MenuIcon,
   Home as HomeIcon,
@@ -411,6 +412,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           />
         </ListItem>
       </List>
+      
+      {/* Profiles Counter */}
+      <Box sx={{ px: 2, pb: 2, mt: 'auto' }}>
+        <ProfilesCounter variant="card" />
+      </Box>
     </Box>
   );
 

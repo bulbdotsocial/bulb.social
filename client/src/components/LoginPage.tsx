@@ -154,9 +154,9 @@ const LoginPage: React.FC = () => {
                   fontSize: { xs: '1.2rem', sm: '1.1rem' },
                   fontWeight: 600,
                   borderRadius: 3,
-                  background: 'linear-gradient(45deg, #E4405F, #405DE6)',
+                  background: 'linear-gradient(45deg, #4B5563, #374151)',
                   '&:hover': {
-                    background: 'linear-gradient(45deg, #C13584, #405DE6)',
+                    background: 'linear-gradient(45deg, #374151, #1F2937)',
                   },
                   mb: 2,
                 }}

@@ -12,6 +12,7 @@ import {
   useTheme,
   useMediaQuery,
 } from '@mui/material';
+import ProfilesCounter from './ProfilesCounter';
 import {
   Favorite as FavoriteIcon,
   Share as ShareIcon,
@@ -191,6 +192,13 @@ const HomePage: React.FC = () => {
             Discover innovative ideas from the community
           </Typography>
         </Box>
+        
+        {/* Profiles Counter for mobile */}
+        {isMobile && (
+          <Box sx={{ mt: 2 }}>
+            <ProfilesCounter variant="compact" />
+          </Box>
+        )}
       </Box>
 
       {/* Ideas Grid */}
@@ -204,32 +212,40 @@ const HomePage: React.FC = () => {
         {/* Sidebar for larger screens */}
         {!isMobile && (
           <Box sx={{ flex: '1 1 0%', maxWidth: '300px' }}>
-            <Card sx={{ position: 'sticky', top: 80 }}>
-              <CardContent>
-                <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                  🔥 Trending Tags
-                </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {['ETHcc', 'French Riviera', 'hackathon', 'Vitalik', 'Bullrun'].map(
-                    (tag) => (
-                      <Chip
-                        key={tag}
-                        label={tag}
-                        size="small"
-                        clickable
-                        sx={{
-                          bgcolor: 'background.default',
-                          '&:hover': {
-                            bgcolor: 'primary.50',
-                            color: 'primary.main',
-                          },
-                        }}
-                      />
-                    )
-                  )}
-                </Box>
-              </CardContent>
-            </Card>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {/* Profiles Counter */}
+              <Box sx={{ position: 'sticky', top: 80 }}>
+                <ProfilesCounter variant="card" />
+              </Box>
+              
+              {/* Trending Tags */}
+              <Card sx={{ position: 'sticky', top: 320 }}>
+                <CardContent>
+                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                    🔥 Trending Tags
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {['ETHcc', 'French Riviera', 'hackathon', 'Vitalik', 'Bullrun'].map(
+                      (tag) => (
+                        <Chip
+                          key={tag}
+                          label={tag}
+                          size="small"
+                          clickable
+                          sx={{
+                            bgcolor: 'background.default',
+                            '&:hover': {
+                              bgcolor: 'primary.50',
+                              color: 'primary.main',
+                            },
+                          }}
+                        />
+                      )
+                    )}
+                  </Box>
+                </CardContent>
+              </Card>
+            </Box>
           </Box>
         )}
       </Box>
