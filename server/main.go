@@ -29,7 +29,7 @@ type Post struct {
 	Private     bool      `json:"private"`
 }
 
-const defaultPort = "8080"
+const defaultPort = "80"
 const projectName = "bulb.social"
 
 var tmpDir string
