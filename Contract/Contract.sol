@@ -36,6 +36,7 @@ contract BulbProfile is ReentrancyGuard {
     event SubscriptionUpdated(uint256 price, uint256 duration);
     event UserSubscribed(address indexed user, uint256 expiresAt);
     event EarningsWithdrawn(address indexed creator, uint256 amount);
+    event SubscriptionDeactivated();
     
     modifier onlyCreator() {
         require(msg.sender == creator, "Only creator can call this");
@@ -144,7 +145,11 @@ contract BulbProfile is ReentrancyGuard {
     }
     
     function deactivateSubscription() external onlyCreator {
+        require(subscription.isActive, "Subscription already deactivated");
+        
         subscription.isActive = false;
+        
+        emit SubscriptionDeactivated();
     }
     
     function getProfileInfo() external view returns (
