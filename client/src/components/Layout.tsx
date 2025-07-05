@@ -53,6 +53,7 @@ import {
 } from '@mui/icons-material';
 import PWAInstallPrompt from './PWAInstallPrompt';
 import Camera from './Camera';
+import CropSelector from './CropSelector';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -64,6 +65,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [speedDialOpen, setSpeedDialOpen] = useState(false);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
+  const [cropSelectorOpen, setCropSelectorOpen] = useState(false);
+  const [rawImageFile, setRawImageFile] = useState<File | null>(null);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [description, setDescription] = useState('');
@@ -145,8 +148,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       setUploadDialogOpen(true);
     };
     reader.readAsDataURL(file);
-    
-    setCameraOpen(false);
   };
 
   const handlePhotoLibrary = () => {
@@ -156,16 +157,22 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     input.onchange = (event) => {
       const file = (event.target as HTMLInputElement).files?.[0];
       if (file) {
-        setSelectedImage(file);
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setImagePreview(e.target?.result as string);
-          setUploadDialogOpen(true);
-        };
-        reader.readAsDataURL(file);
+        setRawImageFile(file);
+        setCropSelectorOpen(true);
       }
     };
     input.click();
+  };
+
+  const handleCropConfirm = (croppedFile: File, previewUrl: string) => {
+    setSelectedImage(croppedFile);
+    setImagePreview(previewUrl);
+    setUploadDialogOpen(true);
+  };
+
+  const handleCropCancel = () => {
+    setCropSelectorOpen(false);
+    setRawImageFile(null);
   };
 
   const handlePostSubmit = () => {
@@ -210,41 +217,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       role="presentation"
       onClick={handleDrawerToggle}
     >
-      <Box sx={{ p: 3, borderBottom: 1, borderColor: 'divider' }}>
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: 1,
-            cursor: 'pointer',
-            '&:hover': {
-              opacity: 0.6,
-            },
-          }}
-          onClick={() => handleNavigation('/')}
-        >
-          <img 
-            src={logoSrc} 
-            alt="Bulb" 
-            style={{ 
-              height: '48px', 
-              width: 'auto'
-            }} 
-          />
-          <Typography 
-            variant="h6" 
-            sx={{ 
-              fontWeight: 'bold',
-              color: 'text.primary',
-              fontSize: '2rem',
-              fontFamily: '"Funnel Display", cursive',
-            }}
-          >
-            Bulb
-          </Typography>
-        </Box>
-      </Box>
-      
       {/* Search on mobile */}
       <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
         <Paper
@@ -785,6 +757,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         open={cameraOpen}
         onClose={() => setCameraOpen(false)}
         onCapture={handleCameraPhoto}
+      />
+
+      {/* Crop Selector Component */}
+      <CropSelector
+        open={cropSelectorOpen}
+        onClose={handleCropCancel}
+        onCropConfirm={handleCropConfirm}
+        imageFile={rawImageFile}
       />
     </Box>
   );
