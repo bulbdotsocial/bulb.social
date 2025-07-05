@@ -14,6 +14,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"sort"
 	"syscall"
 	"time"
 
@@ -240,6 +241,14 @@ type OrbitDBMetadata struct {
 	Value Post `json:"value"`
 }
 
+type OrbitDBMetadataSlice []OrbitDBMetadata
+
+func (a OrbitDBMetadataSlice) Len() int      { return len(a) }
+func (a OrbitDBMetadataSlice) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a OrbitDBMetadataSlice) Less(i, j int) bool {
+	return a[i].Value.CreatedAt.Before(a[j].Value.CreatedAt)
+}
+
 func getFromOrbitDB() ([]OrbitDBMetadata, error) {
 	orbitdbApiUrl, err := url.JoinPath(orbitDBBaseURL, "/orbitdb/get-metadata")
 	if err != nil {
@@ -257,6 +266,8 @@ func getFromOrbitDB() ([]OrbitDBMetadata, error) {
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, fmt.Errorf("failed to decode OrbitDB response: %w", err)
 	}
+	sort.Sort(sort.Reverse(OrbitDBMetadataSlice(response)))
+
 	fmt.Println("Retrieved metadata from OrbitDB:", response)
 	return response, nil
 }
