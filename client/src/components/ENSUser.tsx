@@ -1,6 +1,7 @@
 import React from 'react';
 import { Avatar, Typography, Box, Skeleton, Tooltip } from '@mui/material';
 import { Verified as VerifiedIcon } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { useENS } from '../hooks/useENS';
 
 interface ENSUserProps {
@@ -10,6 +11,7 @@ interface ENSUserProps {
   typography?: 'body1' | 'body2' | 'caption' | 'subtitle1' | 'subtitle2';
   showAvatar?: boolean;
   showVerification?: boolean;
+  linkToProfile?: boolean;
 }
 
 const ENSUser: React.FC<ENSUserProps> = ({
@@ -19,11 +21,19 @@ const ENSUser: React.FC<ENSUserProps> = ({
   typography = 'body2',
   showAvatar = true,
   showVerification = true,
+  linkToProfile = false,
 }) => {
   const ensData = useENS(address);
+  const navigate = useNavigate();
 
   // Check if user is verified (has ENS domain)
   const isENSVerified = ensData.name && ensData.name.endsWith('.eth');
+
+  const handleProfileClick = () => {
+    if (linkToProfile) {
+      navigate(`/profile/${address}`);
+    }
+  };
 
   if (ensData.isLoading) {
     return (
@@ -37,7 +47,18 @@ const ENSUser: React.FC<ENSUserProps> = ({
   }
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+    <Box 
+      sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: 1,
+        cursor: linkToProfile ? 'pointer' : 'default',
+        '&:hover': linkToProfile ? {
+          opacity: 0.8,
+        } : {},
+      }}
+      onClick={handleProfileClick}
+    >
       {showAvatar && (
         <Avatar
           src={ensData.avatar || undefined}

@@ -144,7 +144,7 @@ const InstagramFeed: React.FC = () => {
     >
       {/* Header */}
       <CardHeader
-        avatar={<ENSUser address={post.address} avatarSize={32} />}
+        avatar={<ENSUser address={post.address} avatarSize={32} linkToProfile={true} />}
         action={
           <IconButton aria-label="settings">
             <MoreVertIcon />
@@ -223,6 +223,7 @@ const InstagramFeed: React.FC = () => {
             address={post.address}
             showAvatar={false}
             typography="body2"
+            linkToProfile={true}
           />
           <Typography
             component="span"

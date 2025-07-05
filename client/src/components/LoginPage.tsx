@@ -38,8 +38,8 @@ const LoginPage: React.FC = () => {
   const features = [
     {
       icon: <WalletIcon />,
-      title: 'Multi-Chain Support',
-      description: 'Connect with any wallet across Base, Polygon, Arbitrum, and more'
+      title: 'Flow Blockchain',
+      description: 'Built on Flow - the developer-friendly blockchain for next-generation experiences'
     },
     {
       icon: <SecurityIcon />,
@@ -127,7 +127,7 @@ const LoginPage: React.FC = () => {
                   fontSize: { xs: '1.5rem', sm: '1.75rem' },
                 }}
               >
-                Social Ideas Platform
+                Flow Social Platform
               </Typography>
               <Typography
                 variant="body1"
@@ -138,7 +138,7 @@ const LoginPage: React.FC = () => {
                   lineHeight: 1.6,
                 }}
               >
-                Share ideas, connect with creators, and own your content in the decentralized future
+                Share ideas, connect with creators, and own your content on Flow blockchain
               </Typography>
             </Box>
 
@@ -161,14 +161,14 @@ const LoginPage: React.FC = () => {
                   mb: 2,
                 }}
               >
-                Connect Wallet to Continue
+                Connect
               </Button>
               <Typography 
                 variant="caption" 
                 color="text.secondary"
                 sx={{ fontSize: { xs: '0.9rem', sm: '0.75rem' } }}
               >
-                New to Web3? We'll create a wallet for you automatically
+                New to Web3? We'll create a Flow wallet for you automatically
               </Typography>
             </Box>
 
@@ -244,6 +244,18 @@ const LoginPage: React.FC = () => {
             sx={{ fontSize: { xs: '0.95rem', sm: '0.875rem' } }}
           >
             Powered by{' '}
+            <Typography
+              component="span"
+              variant="body2"
+              sx={{ 
+                color: 'primary.main', 
+                fontWeight: 600,
+                fontSize: { xs: '0.95rem', sm: '0.875rem' },
+              }}
+            >
+              Flow
+            </Typography>{' '}
+            blockchain &{' '}
             <Typography
               component="span"
               variant="body2"

@@ -4,6 +4,7 @@ import { CustomThemeProvider } from './contexts/ThemeContext';
 import Layout from './components/Layout';
 import InstagramFeed from './components/InstagramFeed';
 import ProfilePage from './components/ProfilePage';
+import UserProfilePage from './components/UserProfilePage';
 import LoginPage from './components/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -25,6 +26,7 @@ function App() {
                   <Routes>
                     <Route path="/" element={<InstagramFeed />} />
                     <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/profile/:address" element={<UserProfilePage />} />
                     <Route path="/explore" element={<InstagramFeed />} />
                     <Route path="/activity" element={<InstagramFeed />} />
                   </Routes>
