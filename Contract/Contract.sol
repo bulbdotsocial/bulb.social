@@ -1,153 +1,180 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-contract UserProfile {
-    address public userOwner;
-    address public serverOwner;
-    string public userName;
-    string public profilePicture;
-    string public description;
-    address[] public subscribedUsers;
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-    mapping(address => bool) public isSubscribed;
+contract BulbProfile is ReentrancyGuard {
+    address public creator;
+    address public factory;
 
-    event ProfileUpdated(
-        string userName,
-        string profilePicture,
-        string description
+    struct Subscription {
+        uint256 price;
+        uint256 duration;
+        bool isActive;
+        IERC20 token;
+    }
+
+    struct UserSubscription {
+        uint256 expiresAt;
+        bool isActive;
+    }
+
+    Subscription public subscription;
+    mapping(address => UserSubscription) public userSubscriptions;
+    mapping(address => uint256) public earnings;
+
+    event SubscriptionUpdated(uint256 price, uint256 duration, address token);
+    event UserSubscribed(address indexed user, uint256 expiresAt);
+    event EarningsWithdrawn(
+        address indexed creator,
+        uint256 amount,
+        address token
     );
-    event UserSubscribed(address indexed subscriber);
-    event UserUnsubscribed(address indexed subscriber);
 
-    modifier onlyUserOwner() {
-        require(
-            msg.sender == userOwner,
-            "Only the owner can perform this action"
-        );
+    modifier onlyCreator() {
+        require(msg.sender == creator, "Only creator can call this");
         _;
     }
 
-    modifier onlyServerOwner() {
+    constructor(address _creator) {
+        creator = _creator;
+        factory = msg.sender;
+    }
+
+    function setSubscription(
+        uint256 _price,
+        uint256 _duration,
+        address _token
+    ) external onlyCreator {
+        require(_price > 0, "Price must be greater than 0");
+        require(_duration > 0, "Duration must be greater than 0");
+        require(_token != address(0), "Invalid token address");
+
+        subscription = Subscription({
+            price: _price,
+            duration: _duration,
+            isActive: true,
+            token: IERC20(_token)
+        });
+
+        emit SubscriptionUpdated(_price, _duration, _token);
+    }
+
+    function subscribe() external payable nonReentrant {
+        require(subscription.isActive, "Subscription not active");
+        require(subscription.price > 0, "Subscription not configured");
+
+        // Transfer tokens from subscriber to this contract
         require(
-            msg.sender == serverOwner,
-            "Only the server owner can perform this action"
+            subscription.token.transferFrom(
+                msg.sender,
+                address(this),
+                subscription.price
+            ),
+            "Token transfer failed"
         );
-        _;
-    }
 
-    constructor(address _userOwner, string memory _userName) {
-        userOwner = _userOwner;
-        serverOwner = msg.sender;
-        userName = _userName;
-    }
-
-    function updateProfile(
-        string memory _userName,
-        string memory _profilePicture,
-        string memory _description
-    ) external onlyUserOwner {
-        userName = _userName;
-        profilePicture = _profilePicture;
-        description = _description;
-
-        emit ProfileUpdated(_userName, _profilePicture, _description);
-    }
-
-    function subscribe(address _subscriber) external {
-        require(!isSubscribed[_subscriber], "User already subscribed");
-
-        subscribedUsers.push(_subscriber);
-        isSubscribed[_subscriber] = true;
-
-        emit UserSubscribed(_subscriber);
-    }
-
-    function unsubscribe(address _subscriber) external {
-        require(isSubscribed[_subscriber], "User not subscribed");
-
-        for (uint i = 0; i < subscribedUsers.length; i++) {
-            if (subscribedUsers[i] == _subscriber) {
-                subscribedUsers[i] = subscribedUsers[
-                    subscribedUsers.length - 1
-                ];
-                subscribedUsers.pop();
-                break;
-            }
+        // Update user subscription
+        uint256 newExpiresAt = block.timestamp + subscription.duration;
+        if (
+            userSubscriptions[msg.sender].isActive &&
+            userSubscriptions[msg.sender].expiresAt > block.timestamp
+        ) {
+            // Extend existing subscription
+            newExpiresAt =
+                userSubscriptions[msg.sender].expiresAt +
+                subscription.duration;
         }
 
-        isSubscribed[_subscriber] = false;
+        userSubscriptions[msg.sender] = UserSubscription({
+            expiresAt: newExpiresAt,
+            isActive: true
+        });
 
-        emit UserUnsubscribed(_subscriber);
+        // Add to creator earnings
+        earnings[address(subscription.token)] += subscription.price;
+
+        emit UserSubscribed(msg.sender, newExpiresAt);
     }
 
-    function getSubscribedUsers() external view returns (address[] memory) {
-        return subscribedUsers;
+    function isSubscribed(address user) external view returns (bool) {
+        return
+            userSubscriptions[user].isActive &&
+            userSubscriptions[user].expiresAt > block.timestamp;
     }
 
-    function getSubscriberCount() external view returns (uint256) {
-        return subscribedUsers.length;
+    function withdraw(address tokenAddress) external onlyCreator nonReentrant {
+        uint256 amount = earnings[tokenAddress];
+        require(amount > 0, "No earnings to withdraw");
+
+        earnings[tokenAddress] = 0;
+        IERC20 token = IERC20(tokenAddress);
+        require(token.transfer(creator, amount), "Transfer failed");
+
+        emit EarningsWithdrawn(creator, amount, tokenAddress);
+    }
+
+    function deactivateSubscription() external onlyCreator {
+        subscription.isActive = false;
+    }
+
+    function getSubscriptionInfo()
+        external
+        view
+        returns (uint256 price, uint256 duration, bool isActive, address token)
+    {
+        return (
+            subscription.price,
+            subscription.duration,
+            subscription.isActive,
+            address(subscription.token)
+        );
     }
 }
 
-contract ProfileManager {
-    address public serverOwner;
-
+contract BulbFactory is Ownable, ReentrancyGuard {
     mapping(address => address) public userProfiles;
-    mapping(address => bool) public profileExists;
+    address[] public allProfiles;
 
-    address[] public allUsers;
+    event ProfileCreated(address indexed user, address indexed profile);
 
-    event ProfileCreated(
-        address indexed userID,
-        address profileContract,
-        string userName
-    );
+    constructor() Ownable(msg.sender) {
+        // Le constructeur Ownable nécessite maintenant un paramètre initialOwner
+        // msg.sender sera le propriétaire initial du contrat factory
+    }
 
-    modifier onlyServerOwner() {
+    function createProfile() external returns (address) {
         require(
-            msg.sender == serverOwner,
-            "Only the server owner can perform this action"
+            userProfiles[msg.sender] == address(0),
+            "Profile already exists"
         );
-        _;
+
+        BulbProfile newProfile = new BulbProfile(msg.sender);
+        address profileAddress = address(newProfile);
+
+        userProfiles[msg.sender] = profileAddress;
+        allProfiles.push(profileAddress);
+
+        emit ProfileCreated(msg.sender, profileAddress);
+
+        return profileAddress;
     }
 
-    constructor() {
-        serverOwner = msg.sender;
+    function getProfile(address user) external view returns (address) {
+        return userProfiles[user];
     }
 
-    function createProfile(string memory _userName) external onlyServerOwner {
-        require(
-            !profileExists[msg.sender],
-            "Profile already exists for this user"
-        );
-        require(bytes(_userName).length > 0, "Username required");
-
-        UserProfile newProfile = new UserProfile(msg.sender, _userName);
-
-        userProfiles[msg.sender] = address(newProfile);
-        profileExists[msg.sender] = true;
-        allUsers.push(msg.sender);
-
-        emit ProfileCreated(msg.sender, address(newProfile), _userName);
+    function hasProfile(address user) external view returns (bool) {
+        return userProfiles[user] != address(0);
     }
 
-    function getUserProfile(address _userID) external view returns (address) {
-        require(profileExists[_userID], "Profile does not exist");
-        return userProfiles[_userID];
+    function getAllProfiles() external view returns (address[] memory) {
+        return allProfiles;
     }
 
-    function getAllUsers() external view returns (address[] memory) {
-        return allUsers;
-    }
-
-    function getUserCount() external view returns (uint256) {
-        return allUsers.length;
-    }
-
-    function transferServerOwnership(
-        address _newOwner
-    ) external onlyServerOwner {
-        require(_newOwner != address(0), "Invalid new address");
-        serverOwner = _newOwner;
+    function getProfilesCount() external view returns (uint256) {
+        return allProfiles.length;
     }
 }
