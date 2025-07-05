@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLogout, usePrivy } from '@privy-io/react-auth';
 import { useLogo } from '../hooks/useLogo';
+import { useENS } from '../hooks/useENS';
 import {
   AppBar,
   Toolbar,
@@ -20,6 +21,7 @@ import {
   InputBase,
   Paper,
   Divider,
+  Skeleton,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -46,6 +48,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { logout } = useLogout();
   const { user } = usePrivy();
   const { logoSrc } = useLogo();
+  
+  // Get ENS data for the user's wallet address
+  const walletAddress = user?.wallet?.address;
+  const ensData = useENS(walletAddress);
 
   const handleDrawerToggle = () => {
     setDrawerOpen(!drawerOpen);
@@ -312,21 +318,34 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             >
               <AddIcon fontSize="small" />
             </IconButton>
-            <Avatar
-              onClick={() => handleNavigation('/profile')}
-              sx={{
-                width: 28,
-                height: 28,
-                bgcolor: location.pathname === '/profile' ? 'primary.main' : 'text.secondary',
-                cursor: 'pointer',
-                border: location.pathname === '/profile' ? '2px solid' : 'none',
-                borderColor: 'primary.main',
-                fontSize: '0.75rem',
-              }}
-            >
-              {user?.wallet?.address ? user.wallet.address.slice(2, 4).toUpperCase() : 
-               user?.email?.address ? user.email.address.charAt(0).toUpperCase() : 'U'}
-            </Avatar>
+            {ensData.isLoading ? (
+              <Skeleton
+                variant="circular"
+                width={28}
+                height={28}
+                sx={{ bgcolor: 'action.hover' }}
+              />
+            ) : (
+              <Avatar
+                onClick={() => handleNavigation('/profile')}
+                src={ensData.avatar || undefined}
+                sx={{
+                  width: 28,
+                  height: 28,
+                  bgcolor: location.pathname === '/profile' ? 'primary.main' : 'text.secondary',
+                  cursor: 'pointer',
+                  border: location.pathname === '/profile' ? '2px solid' : 'none',
+                  borderColor: 'primary.main',
+                  fontSize: '0.75rem',
+                }}
+              >
+                {!ensData.avatar && (
+                  ensData.displayName.startsWith('0x') 
+                    ? ensData.displayName.slice(2, 4).toUpperCase()
+                    : ensData.displayName.charAt(0).toUpperCase()
+                )}
+              </Avatar>
+            )}
           </Box>
         </Toolbar>
       </AppBar>

@@ -1,4 +1,5 @@
 import React from 'react';
+import ENSUser from './ENSUser';
 import {
   Box,
   Card,
@@ -6,7 +7,6 @@ import {
   CardMedia,
   CardContent,
   CardActions,
-  Avatar,
   IconButton,
   Typography,
   useTheme,
@@ -25,8 +25,7 @@ import {
 
 interface Post {
   id: number;
-  username: string;
-  avatar: string;
+  address: string; // Ethereum address
   location?: string;
   imageUrl: string;
   likes: number;
@@ -41,12 +40,11 @@ const InstagramFeed: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  // Mock data for posts
+  // Mock data for posts with Ethereum addresses
   const posts: Post[] = [
     {
       id: 1,
-      username: 'alex.creator',
-      avatar: 'AC',
+      address: '0x742d35Cc8B78cBA66b6c3e42F7a6e1E1E1c3A0aD', // Random address for demo
       location: 'San Francisco, CA',
       imageUrl: 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=400&h=400&fit=crop',
       likes: 127,
@@ -58,8 +56,7 @@ const InstagramFeed: React.FC = () => {
     },
     {
       id: 2,
-      username: 'maria.designs',
-      avatar: 'MD',
+      address: '0x8ba1f109551bD432803012645Hac136c27598C45', // Random address for demo
       location: 'Austin, TX',
       imageUrl: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop',
       likes: 89,
@@ -71,8 +68,7 @@ const InstagramFeed: React.FC = () => {
     },
     {
       id: 3,
-      username: 'david.iot',
-      avatar: 'DI',
+      address: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984', // UNI token address for demo
       location: 'Seattle, WA',
       imageUrl: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=400&fit=crop',
       likes: 234,
@@ -95,28 +91,13 @@ const InstagramFeed: React.FC = () => {
     >
       {/* Header */}
       <CardHeader
-        avatar={
-          <Avatar
-            sx={{
-              bgcolor: 'primary.main',
-              width: 32,
-              height: 32,
-              fontSize: '0.875rem',
-            }}
-          >
-            {post.avatar}
-          </Avatar>
-        }
+        avatar={<ENSUser address={post.address} avatarSize={32} />}
         action={
           <IconButton aria-label="settings">
             <MoreVertIcon />
           </IconButton>
         }
-        title={
-          <Typography variant="body1" sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
-            {post.username}
-          </Typography>
-        }
+        title=""
         subheader={
           post.location && (
             <Typography variant="caption" color="text.secondary">
@@ -131,7 +112,7 @@ const InstagramFeed: React.FC = () => {
       <CardMedia
         component="img"
         image={post.imageUrl}
-        alt={`Post by ${post.username}`}
+        alt={`Post by ${post.address}`}
         sx={{
           aspectRatio: '1/1',
           objectFit: 'cover',
@@ -169,17 +150,16 @@ const InstagramFeed: React.FC = () => {
 
         {/* Caption */}
         <Box sx={{ mb: 1 }}>
-          <Typography
-            component="span"
-            variant="body2"
-            sx={{ fontWeight: 600, mr: 1 }}
-          >
-            {post.username}
-          </Typography>
+          <ENSUser 
+            address={post.address} 
+            showAvatar={false} 
+            typography="body2"
+          />
           <Typography
             component="span"
             variant="body2"
             color="text.primary"
+            sx={{ ml: 1 }}
           >
             {post.caption}
           </Typography>

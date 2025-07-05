@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
+import { useENS } from '../hooks/useENS';
 import {
   Box,
   Avatar,
@@ -14,12 +15,14 @@ import {
   useMediaQuery,
   Divider,
   Chip,
+  Skeleton,
 } from '@mui/material';
 import {
   Settings as SettingsIcon,
   GridOn as GridOnIcon,
   BookmarkBorder as BookmarkIcon,
   AccountBalanceWallet as WalletIcon,
+  ContentCopy as CopyIcon,
 } from '@mui/icons-material';
 
 interface ProfileData {
@@ -46,11 +49,27 @@ const ProfilePage: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [currentTab, setCurrentTab] = useState(0);
   const { user } = usePrivy();
+  
+  // Get ENS data for the user's wallet address
+  const walletAddress = user?.wallet?.address;
+  const ensData = useENS(walletAddress);
 
-  // User data from Privy with fallbacks
+  // Copy address to clipboard
+  const handleCopyAddress = async () => {
+    if (walletAddress) {
+      try {
+        await navigator.clipboard.writeText(walletAddress);
+        // You could add a toast notification here
+      } catch (err) {
+        console.error('Failed to copy address:', err);
+      }
+    }
+  };
+
+  // User data from Privy with ENS fallbacks
   const profileData: ProfileData = {
-    username: user?.wallet?.address ? `${user.wallet.address.slice(0, 6)}...${user.wallet.address.slice(-4)}` : 'web3_user',
-    fullName: user?.email?.address || user?.wallet?.address?.slice(0, 8) || 'Web3 User',
+    username: ensData.displayName || 'web3_user',
+    fullName: ensData.name || user?.email?.address || user?.wallet?.address?.slice(0, 8) || 'Web3 User',
     bio: '🚀 Web3 Innovation Platform\n💡 Sharing ideas that change the world\n🌟 Building the future of social media',
     website: 'bulb.social',
     postsCount: 42,
@@ -192,19 +211,34 @@ const ProfilePage: React.FC = () => {
         >
           {/* Avatar */}
           <Box sx={{ textAlign: 'center' }}>
-            <Avatar
-              sx={{
-                width: { xs: 80, sm: 150 },
-                height: { xs: 80, sm: 150 },
-                bgcolor: 'primary.main',
-                fontSize: { xs: '2rem', sm: '4rem' },
-                fontWeight: 'bold',
-                mb: { xs: 1, sm: 0 },
-              }}
-            >
-              {user?.wallet?.address ? user.wallet.address.slice(2, 4).toUpperCase() : 
-               user?.email?.address ? user.email.address.charAt(0).toUpperCase() : 'BC'}
-            </Avatar>
+            {ensData.isLoading ? (
+              <Skeleton
+                variant="circular"
+                sx={{
+                  width: { xs: 80, sm: 150 },
+                  height: { xs: 80, sm: 150 },
+                  mb: { xs: 1, sm: 0 },
+                }}
+              />
+            ) : (
+              <Avatar
+                src={ensData.avatar || undefined}
+                sx={{
+                  width: { xs: 80, sm: 150 },
+                  height: { xs: 80, sm: 150 },
+                  bgcolor: 'primary.main',
+                  fontSize: { xs: '2rem', sm: '4rem' },
+                  fontWeight: 'bold',
+                  mb: { xs: 1, sm: 0 },
+                }}
+              >
+                {!ensData.avatar && (
+                  ensData.displayName.startsWith('0x') 
+                    ? ensData.displayName.slice(2, 4).toUpperCase()
+                    : ensData.displayName.charAt(0).toUpperCase()
+                )}
+              </Avatar>
+            )}
           </Box>
 
           {/* Profile Info */}
@@ -320,16 +354,33 @@ const ProfilePage: React.FC = () => {
               
               {/* Wallet Information */}
               {user?.wallet?.address && (
-                <Box sx={{ mb: 1 }}>
+                <Box sx={{ mb: 1, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                  {ensData.name && (
+                    <Chip
+                      label={ensData.name}
+                      variant="outlined"
+                      size="small"
+                      color="primary"
+                      sx={{
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                      }}
+                    />
+                  )}
                   <Chip
                     icon={<WalletIcon />}
-                    label={`${user.wallet.address.slice(0, 6)}...${user.wallet.address.slice(-4)}`}
+                    label={ensData.displayName.startsWith('0x') ? ensData.displayName : `${user.wallet.address.slice(0, 6)}...${user.wallet.address.slice(-4)}`}
                     variant="outlined"
                     size="small"
+                    onClick={handleCopyAddress}
                     sx={{
                       fontSize: '0.75rem',
+                      cursor: 'pointer',
                       '& .MuiChip-icon': {
                         fontSize: '1rem',
+                      },
+                      '&:hover': {
+                        backgroundColor: 'action.hover',
                       },
                     }}
                   />
