@@ -10,6 +10,8 @@ services:
       - "5001:5001"   # API
       - "8080:8080"   # Gateway
       - "4001:4001"   # Swarm
+    volumes:
+      - ./data:/data 
     environment:
       - IPFS_PROFILE=server
     command: daemon --migrate=true --agent-version-suffix=docker
