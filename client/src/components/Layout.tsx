@@ -36,6 +36,8 @@ import {
   Button,
   Card,
   CardMedia,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -59,6 +61,25 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
+interface PostData {
+  imageCid: string;
+  description: string;
+  walletAddress: string;
+  hashtags: string[];
+  createdAt: string;
+}
+
+interface UploadResponse {
+  message: string;
+  cid: string;
+}
+
+interface CreatePostResponse {
+  message: string;
+  orbit_hash: string;
+  db_address: string;
+}
+
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -71,6 +92,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [description, setDescription] = useState('');
   const [hashtags, setHashtags] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
@@ -175,19 +198,76 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     setRawImageFile(null);
   };
 
-  const handlePostSubmit = () => {
-    if (selectedImage && description) {
-      console.log('Posting:', {
-        image: selectedImage,
-        description,
-        hashtags: hashtags.split(' ').filter(tag => tag.startsWith('#'))
+  const handlePostSubmit = async () => {
+    if (!selectedImage || !description.trim()) return;
+    
+    if (!walletAddress) {
+      setUploadError('No wallet address found. Please connect your wallet.');
+      return;
+    }
+    
+    setIsUploading(true);
+    setUploadError(null);
+    
+    try {
+      // Stage 1: Upload image to get IPFS CID
+      const formData = new FormData();
+      formData.append('file', selectedImage);
+      
+      const uploadResponse = await fetch('https://api.bulb.social/api/v0/upload-pic', {
+        method: 'POST',
+        body: formData,
       });
       
+      if (!uploadResponse.ok) {
+        throw new Error(`Upload failed: ${uploadResponse.statusText}`);
+      }
+      
+      const uploadResult: UploadResponse = await uploadResponse.json();
+      const imageCid = uploadResult.cid;
+      
+      if (!imageCid) {
+        throw new Error('No CID returned from image upload');
+      }
+      
+      // Stage 2: Create post with metadata
+      const postData: PostData = {
+        imageCid: imageCid,
+        description: description.trim(),
+        walletAddress: walletAddress,
+        hashtags: hashtags.split(' ').filter(tag => tag.trim().startsWith('#')),
+        createdAt: new Date().toISOString(),
+      };
+      
+      const createPostResponse = await fetch('https://api.bulb.social/api/v0/create-post', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(postData),
+      });
+      
+      if (!createPostResponse.ok) {
+        throw new Error(`Post creation failed: ${createPostResponse.statusText}`);
+      }
+      
+      const createPostResult: CreatePostResponse = await createPostResponse.json();
+      console.log('Post created successfully:', createPostResult);
+      
+      // Reset form and close dialog
       setSelectedImage(null);
       setImagePreview(null);
       setDescription('');
       setHashtags('');
       setUploadDialogOpen(false);
+      
+      // TODO: Show success message or refresh feed
+      
+    } catch (error) {
+      console.error('Error uploading post:', error);
+      setUploadError(error instanceof Error ? error.message : 'Failed to upload post');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -198,6 +278,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     setImagePreview(null);
     setDescription('');
     setHashtags('');
+    setUploadError(null);
+    setIsUploading(false);
   };
 
   const menuItems = [
@@ -690,6 +772,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </DialogTitle>
         
         <DialogContent sx={{ pt: 1 }}>
+          {/* Error Message */}
+          {uploadError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {uploadError}
+            </Alert>
+          )}
+
           {/* Image Preview */}
           {imagePreview && (
             <Box sx={{ mb: 3, textAlign: 'center' }}>
@@ -718,6 +807,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             onChange={(e) => setDescription(e.target.value)}
             sx={{ mb: 2 }}
             variant="outlined"
+            disabled={isUploading}
           />
 
           {/* Hashtags Input */}
@@ -729,17 +819,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             onChange={(e) => setHashtags(e.target.value)}
             variant="outlined"
             helperText="Add hashtags to reach more people"
+            disabled={isUploading}
           />
         </DialogContent>
 
         <DialogActions sx={{ p: 3, pt: 1 }}>
-          <Button onClick={handleDialogClose} color="inherit">
+          <Button onClick={handleDialogClose} color="inherit" disabled={isUploading}>
             Cancel
           </Button>
           <Button
             onClick={handlePostSubmit}
             variant="contained"
-            disabled={!selectedImage || !description.trim()}
+            disabled={!selectedImage || !description.trim() || isUploading}
+            startIcon={isUploading ? <CircularProgress size={20} /> : null}
             sx={{
               bgcolor: 'primary.main',
               '&:hover': {
@@ -747,7 +839,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               },
             }}
           >
-            Share Post
+            {isUploading ? 'Uploading...' : 'Share Post'}
           </Button>
         </DialogActions>
       </Dialog>
