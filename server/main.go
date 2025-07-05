@@ -141,6 +141,37 @@ func main() {
 		c.JSON(http.StatusOK, metadata)
 	})
 
+	router.GET("/api/v0/profile/:address", func(c *gin.Context) {
+		address := c.Param("address")
+		if address == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Address is required"})
+			return
+		}
+		// get metadata from OrbitDB
+		metadata, err := getFromOrbitDB()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		// filter metadata by address
+		var foundPosts []OrbitDBMetadata
+		for _, m := range metadata {
+			if m.Value.Address == address {
+				foundPosts = append(foundPosts, m)
+			}
+		}
+
+		if len(foundPosts) == 0 {
+			c.JSON(http.StatusNotFound, gin.H{"error": "No posts found for this address"})
+			return
+		}
+		sort.Sort(sort.Reverse(OrbitDBMetadataSlice(foundPosts)))
+
+		c.JSON(http.StatusOK, foundPosts)
+	})
+
 	s := &http.Server{
 		Addr:           net.JoinHostPort("", defaultPort),
 		Handler:        router,
