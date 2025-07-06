@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { createWalletClient, custom, type Address, type Hex } from 'viem';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { BULB_FACTORY_CONFIG, FLOW_TESTNET } from '../config/contract';
+import { BULB_PROFILE_ABI } from '../config/profileContract';
 
 export interface CreateProfileParams {
     username: string;
@@ -202,20 +203,33 @@ export const useWalletContract = () => {
         params: UpdateProfileParams,
         userAddress: Address
     ) => {
-        // This would be used with the individual profile contract
-        // For now, we'll implement a placeholder that shows the structure
         console.log('Update profile called with:', { profileContractAddress, params, userAddress });
 
-        // Once you have the individual profile contract ABI, you can use:
-        // return executeContractWrite(
-        //   profileContractAddress,
-        //   PROFILE_CONTRACT_ABI,
-        //   'updateProfile',
-        //   [params.username, params.profilePicture, params.description],
-        //   userAddress
-        // );
+        // Validate parameters
+        if (!params.username || params.username.trim().length === 0) {
+            throw new Error('Username is required');
+        }
 
-        throw new Error('Profile update functionality requires the individual profile contract ABI');
+        if (params.username.length > 50) {
+            throw new Error('Username too long (max 50 characters)');
+        }
+
+        if (params.description && params.description.length > 500) {
+            throw new Error('Description too long (max 500 characters)');
+        }
+
+        // Call the individual profile contract's updateProfile function
+        return executeContractWrite(
+            profileContractAddress,
+            BULB_PROFILE_ABI,
+            'updateProfile',
+            [
+                params.username || '',
+                params.profilePicture || '',
+                params.description || ''
+            ],
+            userAddress
+        );
     };
 
     return {

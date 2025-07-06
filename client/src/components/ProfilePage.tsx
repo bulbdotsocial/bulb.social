@@ -2,7 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { useENS } from '../hooks/useENS';
 import { useBulbFactory } from '../hooks/useBulbFactory';
+import { useProfileContract } from '../hooks/useProfileContract';
 import CreateProfileDialog from './CreateProfileDialog';
+import UpdateProfileDialog from './UpdateProfileDialog';
 import {
   Box,
   Avatar,
@@ -54,32 +56,42 @@ const ProfilePage: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [currentTab, setCurrentTab] = useState(0);
   const [createProfileOpen, setCreateProfileOpen] = useState(false);
+  const [updateProfileOpen, setUpdateProfileOpen] = useState(false);
   const { user } = usePrivy();
-  
+
   // Get ENS data for the user's wallet address
   const walletAddress = user?.wallet?.address;
   const ensData = useENS(walletAddress);
-  
+
   // Check if user has an exclusive profile
   const { checkUserProfile } = useBulbFactory();
   const [hasExclusiveProfile, setHasExclusiveProfile] = useState<boolean | null>(null);
+  const [profileContractAddress, setProfileContractAddress] = useState<string | null>(null);
   const [checkingProfile, setCheckingProfile] = useState(false);
+
+  // Get profile data from contract
+  const { profileInfo, refreshProfile } = useProfileContract(
+    profileContractAddress as `0x${string}` | null
+  );
 
   // Check for exclusive profile on mount and when wallet changes
   const checkProfile = useCallback(async () => {
     if (walletAddress) {
       setCheckingProfile(true);
       try {
-        const { hasProfile } = await checkUserProfile(walletAddress as `0x${string}`);
+        const { hasProfile, profileAddress } = await checkUserProfile(walletAddress as `0x${string}`);
         setHasExclusiveProfile(hasProfile);
+        setProfileContractAddress(profileAddress);
       } catch (error) {
         console.error('Error checking exclusive profile:', error);
         setHasExclusiveProfile(false);
+        setProfileContractAddress(null);
       } finally {
         setCheckingProfile(false);
       }
     } else {
       setHasExclusiveProfile(null);
+      setProfileContractAddress(null);
     }
   }, [walletAddress, checkUserProfile]);
 
@@ -99,11 +111,11 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  // User data from Privy with ENS fallbacks
+  // User data from Privy with ENS fallbacks, prioritizing contract data when available
   const profileData: ProfileData = {
-    username: ensData.displayName || 'web3_user',
+    username: profileInfo?.username || ensData.displayName || 'web3_user',
     fullName: ensData.name || user?.email?.address || user?.wallet?.address?.slice(0, 8) || 'Web3 User',
-    bio: '🚀 Web3 Innovation Platform\n💡 Sharing ideas that change the world\n🌟 Building the future of social media',
+    bio: profileInfo?.description || '🚀 Web3 Innovation Platform\n💡 Sharing ideas that change the world\n🌟 Building the future of social media',
     website: 'bulb.social',
     postsCount: 42,
     followersCount: 1247,
@@ -268,7 +280,7 @@ const ProfilePage: React.FC = () => {
                 }}
               >
                 {!ensData.avatar && (
-                  ensData.displayName.startsWith('0x') 
+                  ensData.displayName.startsWith('0x')
                     ? ensData.displayName.slice(2, 4).toUpperCase()
                     : ensData.displayName.charAt(0).toUpperCase()
                 )}
@@ -299,7 +311,7 @@ const ProfilePage: React.FC = () => {
                 {profileData.username}
               </Typography>
               {isENSVerified && (
-                <Tooltip 
+                <Tooltip
                   title="Verified ENS domain owner"
                   placement="top"
                   arrow
@@ -367,6 +379,7 @@ const ProfilePage: React.FC = () => {
                 <Button
                   variant="outlined"
                   size="small"
+                  onClick={() => setUpdateProfileOpen(true)}
                   sx={{
                     textTransform: 'none',
                     fontWeight: 600,
@@ -442,7 +455,7 @@ const ProfilePage: React.FC = () => {
               >
                 {profileData.bio}
               </Typography>
-              
+
               {/* Wallet Information */}
               {user?.wallet?.address && (
                 <Box sx={{ mb: 1, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
@@ -477,7 +490,7 @@ const ProfilePage: React.FC = () => {
                   />
                 </Box>
               )}
-              
+
               <Typography
                 variant="body2"
                 sx={{
@@ -594,6 +607,26 @@ const ProfilePage: React.FC = () => {
           // Refresh profile check to ensure cache is updated
           checkProfile();
         }}
+      />
+
+      {/* Update Profile Dialog */}
+      <UpdateProfileDialog
+        open={updateProfileOpen}
+        onClose={() => setUpdateProfileOpen(false)}
+        onSuccess={() => {
+          console.log('Profile updated successfully');
+          setUpdateProfileOpen(false);
+          // Refresh profile data from the contract
+          refreshProfile();
+          // Refresh profile check to update any cached data
+          checkProfile();
+        }}
+        currentProfile={{
+          username: profileData.username,
+          profilePicture: profileInfo?.profilePicture || '',
+          description: profileData.bio,
+        }}
+        profileContractAddress={profileContractAddress as `0x${string}` | undefined}
       />
     </Box>
   );
