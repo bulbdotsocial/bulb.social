@@ -28,6 +28,23 @@ import {
   PersonAdd as FollowIcon,
 } from '@mui/icons-material';
 
+// API Response interfaces
+interface ApiProfileValue {
+  cid: string;
+  description: string;
+  address: string;
+  created_at: string;
+  tags: string[];
+  private: boolean;
+}
+
+interface ApiProfileItem {
+  hash: string;
+  key: string;
+  value: ApiProfileValue;
+}
+
+// UI interfaces
 interface UserProfileData {
   address: string;
   username: string;
@@ -79,16 +96,66 @@ const UserProfilePage: React.FC = () => {
           throw new Error(`Failed to fetch profile: ${response.status}`);
         }
         
-        const data = await response.json();
-        setProfileData(data);
+        const apiData: ApiProfileItem[] = await response.json();
+        console.log('API Response:', apiData);
+
+        // Find the profile data for this address
+        const profileItem = apiData.find(item => 
+          item.value.address.toLowerCase() === address.toLowerCase()
+        );
+
+        if (profileItem) {
+          // Transform API data to UI format
+          const transformedData: UserProfileData = {
+            address: profileItem.value.address,
+            username: address ? `user_${address.slice(0, 6)}` : 'unknown_user',
+            fullName: profileItem.value.address.slice(0, 8),
+            bio: profileItem.value.description || '🌐 Web3 enthusiast\n💡 Building on Flow blockchain\n🚀 Sharing the journey',
+            website: 'bulb.social',
+            postsCount: apiData.filter(item => item.value.address.toLowerCase() === address.toLowerCase()).length,
+            followersCount: Math.floor(Math.random() * 1000) + 100, // Mock data for now
+            followingCount: Math.floor(Math.random() * 500) + 50, // Mock data for now
+            posts: [], // We'll populate this from the API data
+          };
+
+          // Transform API items to posts if they have images
+          const posts: Post[] = apiData
+            .filter(item => item.value.address.toLowerCase() === address.toLowerCase())
+            .map((item, index) => ({
+              id: index + 1,
+              imageUrl: `https://gateway.pinata.cloud/ipfs/${item.value.cid}`, // Assuming CID is for images
+              likes: Math.floor(Math.random() * 200) + 10, // Mock likes
+              comments: Math.floor(Math.random() * 50) + 1, // Mock comments
+            }));
+
+          transformedData.posts = posts.length > 0 ? posts : [
+            // Fallback posts if no images found
+            {
+              id: 1,
+              imageUrl: 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=300&h=300&fit=crop',
+              likes: 87,
+              comments: 5,
+            },
+            {
+              id: 2,
+              imageUrl: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=300&h=300&fit=crop',
+              likes: 64,
+              comments: 8,
+            },
+          ];
+
+          setProfileData(transformedData);
+        } else {
+          throw new Error('Profile not found for this address');
+        }
       } catch (err) {
         console.error('Error fetching user profile:', err);
         setError(err instanceof Error ? err.message : 'Failed to load profile');
         // Fallback to mock data for development
         setProfileData({
           address: address!,
-          username: ensData.displayName || `user_${address?.slice(0, 6)}` || 'unknown_user',
-          fullName: ensData.name || address?.slice(0, 8) || 'Unknown User',
+          username: address ? `user_${address.slice(0, 6)}` : 'unknown_user',
+          fullName: address ? address.slice(0, 8) : 'Unknown User',
           bio: '🌐 Web3 enthusiast\n💡 Building on Flow blockchain\n🚀 Sharing the journey',
           website: 'bulb.social',
           postsCount: 24,
@@ -127,7 +194,19 @@ const UserProfilePage: React.FC = () => {
     };
 
     fetchUserProfile();
-  }, [address, ensData.displayName, ensData.name]);
+  }, [address]); // Remove ensData dependencies to avoid re-running when ENS loads
+
+  // Update profile data with ENS information when available
+  useEffect(() => {
+    if (profileData && ensData && !ensData.isLoading) {
+      setProfileData(prev => prev ? {
+        ...prev,
+        username: ensData.displayName || prev.username,
+        fullName: ensData.name || prev.fullName,
+        avatarUrl: ensData.avatar || prev.avatarUrl,
+      } : null);
+    }
+  }, [ensData, profileData]);
 
   // Copy address to clipboard
   const handleCopyAddress = async () => {
@@ -322,7 +401,7 @@ const UserProfilePage: React.FC = () => {
                   mb: { xs: 1, sm: 0 },
                 }}
               >
-                {!ensData.avatar && !profileData.avatarUrl && (
+                {!ensData.avatar && !profileData.avatarUrl && ensData.displayName && (
                   ensData.displayName.startsWith('0x') 
                     ? ensData.displayName.slice(2, 4).toUpperCase()
                     : ensData.displayName.charAt(0).toUpperCase()
@@ -481,7 +560,7 @@ const UserProfilePage: React.FC = () => {
                   )}
                   <Chip
                     icon={<WalletIcon />}
-                    label={ensData.displayName.startsWith('0x') ? ensData.displayName : `${address.slice(0, 6)}...${address.slice(-4)}`}
+                    label={ensData.displayName && ensData.displayName.startsWith('0x') ? ensData.displayName : `${address.slice(0, 6)}...${address.slice(-4)}`}
                     variant="outlined"
                     size="small"
                     onClick={handleCopyAddress}

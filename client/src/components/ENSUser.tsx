@@ -69,7 +69,7 @@ const ENSUser: React.FC<ENSUserProps> = ({
             bgcolor: 'primary.main',
           }}
         >
-          {!ensData.avatar && (
+          {!ensData.avatar && ensData.displayName && (
             ensData.displayName.startsWith('0x') 
               ? ensData.displayName.slice(2, 4).toUpperCase()
               : ensData.displayName.charAt(0).toUpperCase()

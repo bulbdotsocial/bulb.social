@@ -19,8 +19,8 @@ export const useENS = (address: string | undefined): ENSData => {
   const [ensData, setEnsData] = useState<ENSData>({
     name: null,
     avatar: null,
-    displayName: '',
-    isLoading: true,
+    displayName: address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '',
+    isLoading: !!address,
     error: null,
   });
 
