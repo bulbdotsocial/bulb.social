@@ -32,7 +32,7 @@ const PWAInstallPrompt: React.FC = () => {
   useEffect(() => {
     // Check if user has previously dismissed the prompt
     const hasUserDismissed = localStorage.getItem('pwa-install-dismissed') === 'true';
-    
+
     // Check if app is already installed
     const checkIfInstalled = () => {
       // Check if running in standalone mode (already installed)
@@ -40,13 +40,13 @@ const PWAInstallPrompt: React.FC = () => {
         setIsAppInstalled(true);
         return true;
       }
-      
+
       // Check if running as installed PWA
       if (window.navigator.standalone === true) {
         setIsAppInstalled(true);
         return true;
       }
-      
+
       return false;
     };
 
@@ -97,7 +97,7 @@ const PWAInstallPrompt: React.FC = () => {
 
       // Wait for the user to respond to the prompt
       const { outcome } = await deferredPrompt.userChoice;
-      
+
       if (outcome === 'accepted') {
         console.log('User accepted the install prompt');
       } else {
@@ -137,7 +137,12 @@ const PWAInstallPrompt: React.FC = () => {
     <Snackbar
       open={showInstallPrompt}
       anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      sx={{ mb: 2 }}
+      sx={{
+        mb: 2,
+        '& .MuiSnackbar-root': {
+          backgroundColor: 'transparent',
+        }
+      }}
     >
       <Alert
         severity="info"
@@ -148,11 +153,15 @@ const PWAInstallPrompt: React.FC = () => {
           color: 'white',
           border: 'none',
           borderRadius: 2,
+          opacity: 1,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
           '& .MuiAlert-icon': {
             color: 'white',
           },
           '& .MuiAlert-message': {
             width: '100%',
+            color: 'white',
+            fontWeight: 500,
           },
         }}
         action={

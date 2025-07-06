@@ -69,6 +69,10 @@ const ProfilePage: React.FC = () => {
   const [profileContractAddress, setProfileContractAddress] = useState<string | null>(null);
   const [checkingProfile, setCheckingProfile] = useState(false);
 
+  // User posts state
+  const [userPosts, setUserPosts] = useState<Post[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(false);
+
   // Get profile data from contract
   const { profileInfo, refreshProfile } = useProfileContract(
     profileContractAddress as `0x${string}` | null
@@ -125,60 +129,48 @@ const ProfilePage: React.FC = () => {
   // Check if user is verified (has ENS domain)
   const isENSVerified = ensData.name && ensData.name.endsWith('.eth');
 
-  // Mock posts data
-  const userPosts: Post[] = [
-    {
-      id: 1,
-      imageUrl: 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=300&h=300&fit=crop',
-      likes: 127,
-      comments: 8,
-    },
-    {
-      id: 2,
-      imageUrl: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=300&h=300&fit=crop',
-      likes: 89,
-      comments: 12,
-    },
-    {
-      id: 3,
-      imageUrl: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=300&h=300&fit=crop',
-      likes: 234,
-      comments: 15,
-    },
-    {
-      id: 4,
-      imageUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=300&h=300&fit=crop',
-      likes: 156,
-      comments: 23,
-    },
-    {
-      id: 5,
-      imageUrl: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=300&h=300&fit=crop',
-      likes: 98,
-      comments: 7,
-    },
-    {
-      id: 6,
-      imageUrl: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=300&h=300&fit=crop',
-      likes: 312,
-      comments: 28,
-    },
-  ];
+  // Fetch user's posts from API
+  const fetchUserPosts = useCallback(async () => {
+    if (!walletAddress) return;
 
-  const savedPosts: Post[] = [
-    {
-      id: 7,
-      imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop',
-      likes: 445,
-      comments: 19,
-    },
-    {
-      id: 8,
-      imageUrl: 'https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?w=300&h=300&fit=crop',
-      likes: 223,
-      comments: 14,
-    },
-  ];
+    setLoadingPosts(true);
+    try {
+      const response = await fetch(`https://api.bulb.social/api/v0/profile/${walletAddress}`);
+      if (response.ok) {
+        const data = await response.json();
+
+        // Transform API data to posts format
+        const posts: Post[] = data
+          .filter((item: any) =>
+            item.value.address.toLowerCase() === walletAddress.toLowerCase() &&
+            !item.value.private
+          )
+          .map((item: any, index: number) => ({
+            id: index + 1,
+            imageUrl: `https://ipfs.io/ipfs/${item.value.cid}`,
+            likes: Math.floor(Math.random() * 200) + 10,
+            comments: Math.floor(Math.random() * 50) + 1,
+          }));
+
+        setUserPosts(posts);
+      } else {
+        // Fallback to empty array if API fails
+        setUserPosts([]);
+      }
+    } catch (error) {
+      console.error('Error fetching user posts:', error);
+      setUserPosts([]);
+    } finally {
+      setLoadingPosts(false);
+    }
+  }, [walletAddress]);
+
+  // Fetch posts when wallet address changes
+  useEffect(() => {
+    fetchUserPosts();
+  }, [fetchUserPosts]);
+
+  const savedPosts: Post[] = [];
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setCurrentTab(newValue);
@@ -244,6 +236,9 @@ const ProfilePage: React.FC = () => {
           mx: 'auto',
           px: { xs: 2, sm: 3 },
           pt: { xs: 2, sm: 4 },
+          bgcolor: 'background.default',
+          position: 'relative',
+          zIndex: 1,
         }}
       >
         {/* Profile Header */}
@@ -306,6 +301,9 @@ const ProfilePage: React.FC = () => {
                 sx={{
                   fontWeight: 300,
                   fontSize: { xs: '1.5rem', sm: '1.75rem' },
+                  color: 'text.primary',
+                  opacity: 1,
+                  textShadow: 'none',
                 }}
               >
                 {profileData.username}
@@ -434,13 +432,19 @@ const ProfilePage: React.FC = () => {
             </Box>
 
             {/* Bio */}
-            <Box sx={{ maxWidth: { xs: '100%', sm: 400 } }}>
+            <Box sx={{
+              maxWidth: { xs: '100%', sm: 400 },
+              bgcolor: 'background.default',
+              p: 0,
+            }}>
               <Typography
                 variant="body1"
                 sx={{
                   fontWeight: 600,
                   mb: 0.5,
                   fontSize: '0.875rem',
+                  color: 'text.primary',
+                  opacity: 1,
                 }}
               >
                 {profileData.fullName}
@@ -450,6 +454,8 @@ const ProfilePage: React.FC = () => {
                 sx={{
                   whiteSpace: 'pre-line',
                   lineHeight: 1.4,
+                  color: 'text.primary',
+                  opacity: 1,
                   mb: 1,
                 }}
               >
@@ -591,8 +597,38 @@ const ProfilePage: React.FC = () => {
 
         {/* Content */}
         <Box sx={{ mt: 2 }}>
-          {currentTab === 0 && <PostGrid posts={userPosts} />}
-          {currentTab === 1 && <PostGrid posts={savedPosts} />}
+          {currentTab === 0 && (
+            loadingPosts ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : userPosts.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 8 }}>
+                <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
+                  No Posts Yet
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  When you share photos, they will appear on your profile.
+                </Typography>
+              </Box>
+            ) : (
+              <PostGrid posts={userPosts} />
+            )
+          )}
+          {currentTab === 1 && (
+            savedPosts.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 8 }}>
+                <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
+                  No Saved Posts
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Save posts to view them here.
+                </Typography>
+              </Box>
+            ) : (
+              <PostGrid posts={savedPosts} />
+            )
+          )}
         </Box>
       </Box>
 
