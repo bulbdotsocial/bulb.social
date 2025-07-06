@@ -157,7 +157,7 @@ const InstagramFeed: React.FC = () => {
               {post.tags.slice(0, 3).map((tag) => (
                 <Chip
                   key={tag}
-                  label={`#${tag}`}
+                  label={`${tag}`}
                   size="small"
                   sx={{
                     height: 18,
@@ -340,7 +340,7 @@ const InstagramFeed: React.FC = () => {
                   .map((tag) => (
                     <Chip
                       key={tag}
-                      label={`#${tag}`}
+                      label={`${tag}`}
                       size="small"
                       clickable
                       sx={{
