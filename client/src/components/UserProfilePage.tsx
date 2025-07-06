@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useENS } from '../hooks/useENS';
+import { useBulbFactory } from '../hooks/useBulbFactory';
+import { useProfileContract } from '../hooks/useProfileContract';
+import type { Address } from 'viem';
 import {
   Box,
   Avatar,
@@ -75,9 +78,35 @@ const UserProfilePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const ensUpdatedRef = useRef(false);
   const fetchedAddressRef = useRef<string | null>(null);
-  
+
   // Get ENS data for the user's wallet address
   const ensData = useENS(address);
+
+  // Get profile contract data
+  const { checkUserProfile } = useBulbFactory();
+  const [profileContractAddress, setProfileContractAddress] = useState<Address | null>(null);
+  const { profileInfo } = useProfileContract(profileContractAddress);
+
+  // Check for profile contract when address changes
+  useEffect(() => {
+    const checkProfile = async () => {
+      if (address) {
+        try {
+          const { hasProfile, profileAddress } = await checkUserProfile(address as Address);
+          if (hasProfile && profileAddress) {
+            setProfileContractAddress(profileAddress);
+          } else {
+            setProfileContractAddress(null);
+          }
+        } catch (error) {
+          console.error('Error checking profile for address:', address, error);
+          setProfileContractAddress(null);
+        }
+      }
+    };
+
+    checkProfile();
+  }, [address, checkUserProfile]);
 
   // Fetch user profile data
   useEffect(() => {
@@ -95,38 +124,39 @@ const UserProfilePage: React.FC = () => {
       }
 
       console.log('Fetching profile for address:', address);
-      
+
       try {
         setLoading(true);
         setError(null);
         ensUpdatedRef.current = false; // Reset ENS update flag for new address
         fetchedAddressRef.current = address; // Mark this address as being fetched
-        
+
         const response = await fetch(`https://api.bulb.social/api/v0/profile/${address}`);
-        
+
         if (!response.ok) {
           throw new Error(`Failed to fetch profile: ${response.status}`);
         }
-        
+
         const apiData: ApiProfileItem[] = await response.json();
         console.log('API Response:', apiData);
 
         // Find the profile data for this address
-        const profileItem = apiData.find(item => 
+        const profileItem = apiData.find(item =>
           item.value.address.toLowerCase() === address.toLowerCase()
         );
 
         if (profileItem) {
-          // Transform API data to UI format
+          // Transform API data to UI format, prioritizing contract data
           const transformedData: UserProfileData = {
             address: profileItem.value.address,
-            username: address ? `user_${address.slice(0, 6)}` : 'unknown_user',
-            fullName: profileItem.value.address.slice(0, 8),
-            bio: profileItem.value.description || '🌐 Web3 enthusiast\n💡 Building on Flow blockchain\n🚀 Sharing the journey',
+            username: profileInfo?.username || (address ? `user_${address.slice(0, 6)}` : 'unknown_user'),
+            fullName: ensData.name || profileItem.value.address.slice(0, 8),
+            bio: profileInfo?.description || profileItem.value.description || '🌐 Web3 enthusiast\n💡 Building on Flow blockchain\n🚀 Sharing the journey',
             website: 'bulb.social',
             postsCount: apiData.filter(item => item.value.address.toLowerCase() === address.toLowerCase()).length,
             followersCount: Math.floor(Math.random() * 1000) + 100, // Mock data for now
             followingCount: Math.floor(Math.random() * 500) + 50, // Mock data for now
+            avatarUrl: profileInfo?.profilePicture ? `https://ipfs.io/ipfs/${profileInfo.profilePicture}` : ensData.avatar || undefined,
             posts: [], // We'll populate this from the API data
           };
 
@@ -167,13 +197,14 @@ const UserProfilePage: React.FC = () => {
         // Fallback to mock data for development
         setProfileData({
           address: address!,
-          username: address ? `user_${address.slice(0, 6)}` : 'unknown_user',
-          fullName: address ? address.slice(0, 8) : 'Unknown User',
-          bio: '🌐 Web3 enthusiast\n💡 Building on Flow blockchain\n🚀 Sharing the journey',
+          username: profileInfo?.username || (address ? `user_${address.slice(0, 6)}` : 'unknown_user'),
+          fullName: ensData.name || (address ? address.slice(0, 8) : 'Unknown User'),
+          bio: profileInfo?.description || '🌐 Web3 enthusiast\n💡 Building on Flow blockchain\n🚀 Sharing the journey',
           website: 'bulb.social',
           postsCount: 24,
           followersCount: 847,
           followingCount: 156,
+          avatarUrl: profileInfo?.profilePicture ? `https://ipfs.io/ipfs/${profileInfo.profilePicture}` : ensData.avatar || undefined,
           posts: [
             {
               id: 1,
@@ -209,16 +240,32 @@ const UserProfilePage: React.FC = () => {
     fetchUserProfile();
   }, [address]); // Remove ensData dependencies to avoid re-running when ENS loads
 
+  // Update profile data with contract profile information when available
+  useEffect(() => {
+    if (profileData && profileInfo) {
+      setProfileData(prev => {
+        if (!prev) return prev;
+
+        return {
+          ...prev,
+          username: profileInfo.username || prev.username,
+          bio: profileInfo.description || prev.bio,
+          avatarUrl: profileInfo.profilePicture ? `https://ipfs.io/ipfs/${profileInfo.profilePicture}` : prev.avatarUrl,
+        };
+      });
+    }
+  }, [profileData, profileInfo]);
+
   // Update profile data with ENS information when available
   useEffect(() => {
     if (profileData && ensData && !ensData.isLoading && !ensUpdatedRef.current) {
       // Only update if the current username is still the auto-generated one
       const isAutoGeneratedUsername = profileData.username.startsWith('user_');
-      
+
       if (isAutoGeneratedUsername || ensData.name || ensData.avatar) {
         setProfileData(prev => {
           if (!prev) return null;
-          
+
           return {
             ...prev,
             username: ensData.displayName || prev.username,
@@ -435,7 +482,7 @@ const UserProfilePage: React.FC = () => {
                 }}
               >
                 {!ensData.avatar && !profileData.avatarUrl && ensData.displayName && (
-                  ensData.displayName.startsWith('0x') 
+                  ensData.displayName.startsWith('0x')
                     ? ensData.displayName.slice(2, 4).toUpperCase()
                     : ensData.displayName.charAt(0).toUpperCase()
                 )}
@@ -466,7 +513,7 @@ const UserProfilePage: React.FC = () => {
                 {profileData.username}
               </Typography>
               {isENSVerified && (
-                <Tooltip 
+                <Tooltip
                   title="Verified ENS domain owner"
                   placement="top"
                   arrow
@@ -575,7 +622,7 @@ const UserProfilePage: React.FC = () => {
               >
                 {profileData.bio}
               </Typography>
-              
+
               {/* Wallet Information */}
               {address && (
                 <Box sx={{ mb: 1, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
@@ -610,7 +657,7 @@ const UserProfilePage: React.FC = () => {
                   />
                 </Box>
               )}
-              
+
               <Typography
                 variant="body2"
                 sx={{

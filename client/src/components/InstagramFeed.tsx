@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import ENSUser from './ENSUser';
+import ProfileUser from './ProfileUser';
 import {
   Box,
   Card,
@@ -144,7 +144,7 @@ const InstagramFeed: React.FC = () => {
     >
       {/* Header */}
       <CardHeader
-        avatar={<ENSUser address={post.address} avatarSize={32} linkToProfile={true} />}
+        avatar={<ProfileUser address={post.address} avatarSize={32} linkToProfile={true} />}
         action={
           <IconButton aria-label="settings">
             <MoreVertIcon />
@@ -219,7 +219,7 @@ const InstagramFeed: React.FC = () => {
 
         {/* Caption */}
         <Box sx={{ mb: 1 }}>
-          <ENSUser
+          <ProfileUser
             address={post.address}
             showAvatar={false}
             typography="body2"
