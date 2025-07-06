@@ -720,7 +720,7 @@ const UserProfilePage: React.FC = () => {
         )}
 
         {/* Tabs */}
-        <Box sx={{ borderTop: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+        <Box sx={{ borderTop: 1, borderColor: 'divider' }}>
           <Tabs
             value={currentTab}
             onChange={handleTabChange}
@@ -745,7 +745,6 @@ const UserProfilePage: React.FC = () => {
                 },
               },
               '& .MuiTabs-indicator': {
-                backgroundColor: 'text.primary',
                 height: 1,
                 bottom: 0,
               },
