@@ -11,9 +11,9 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: [
-        'favicon.ico', 
-        'logo_app.png', 
-        'apple-touch-icon.png', 
+        'favicon.ico',
+        'logo_app.png',
+        'apple-touch-icon.png',
         'mask-icon.svg',
         'android/*.png',
         'ios/*.png',
@@ -143,7 +143,7 @@ export default defineConfig({
         globPatterns: [
           '**/*.{js,css,html,ico,png,svg}',
           'android/*.png',
-          'ios/*.png', 
+          'ios/*.png',
           'windows11/*.png'
         ],
         runtimeCaching: [
@@ -180,6 +180,19 @@ export default defineConfig({
       },
     }),
   ],
+  define: {
+    global: 'globalThis',
+  },
+  resolve: {
+    alias: {
+      buffer: 'buffer',
+      events: 'events',
+      util: 'util',
+    },
+  },
+  optimizeDeps: {
+    include: ['buffer', 'events', 'util']
+  },
   server: {
     host: '0.0.0.0',
     port: 3000,

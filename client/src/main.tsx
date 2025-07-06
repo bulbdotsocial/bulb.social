@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import './polyfills' // Import polyfills avant tout le reste
 import './index.css'
 import App from './App.tsx'
 

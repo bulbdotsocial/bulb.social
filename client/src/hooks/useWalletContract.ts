@@ -22,6 +22,10 @@ export const useWalletContract = () => {
     const { wallets } = useWallets();
 
     const getWalletClient = async (): Promise<{ client: any; account: Address }> => {
+        console.log('🔍 Getting wallet client...');
+        console.log('Available wallets:', wallets.length);
+        console.log('User wallet address:', user?.wallet?.address);
+
         // Try to get Privy wallet first
         const privyWallet = wallets.find(wallet =>
             wallet.address.toLowerCase() === user?.wallet?.address?.toLowerCase()
@@ -29,26 +33,35 @@ export const useWalletContract = () => {
 
         if (privyWallet && privyWallet.getEthereumProvider) {
             try {
+                console.log('🔄 Trying Privy wallet provider...');
                 const provider = await privyWallet.getEthereumProvider();
+                console.log('✅ Privy provider obtained:', !!provider);
+
                 const walletClient = createWalletClient({
                     chain: FLOW_TESTNET,
                     transport: custom(provider),
                 });
+
+                console.log('✅ Privy wallet client created successfully');
                 return {
                     client: walletClient,
                     account: privyWallet.address as Address
                 };
             } catch (error) {
-                console.warn('Failed to get Privy wallet provider, falling back to MetaMask:', error);
+                console.warn('❌ Failed to get Privy wallet provider, falling back to MetaMask:', error);
             }
+        } else {
+            console.log('⚠️ No suitable Privy wallet found, falling back to MetaMask');
         }
 
         // Fallback to MetaMask if Privy fails or not available
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if (typeof (window as any).ethereum === 'undefined') {
+            console.error('❌ No wallet provider available');
             throw new Error('No wallet provider available. Please install MetaMask or use a supported wallet.');
         }
 
+        console.log('🔄 Using MetaMask fallback...');
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const provider = (window as any).ethereum;
         const walletClient = createWalletClient({
@@ -58,6 +71,7 @@ export const useWalletContract = () => {
 
         // Request account access for MetaMask
         const [account] = await walletClient.requestAddresses();
+        console.log('✅ MetaMask wallet client created successfully');
         return { client: walletClient, account };
     };
 
@@ -94,6 +108,12 @@ export const useWalletContract = () => {
         userAddress: Address
     ): Promise<Hex> => {
         try {
+            console.log('🚀 Starting contract write execution...');
+            console.log('Contract:', contractAddress);
+            console.log('Function:', functionName);
+            console.log('Args:', args);
+            console.log('User address:', userAddress);
+
             setIsLoading(true);
             setError(null);
 
@@ -105,6 +125,7 @@ export const useWalletContract = () => {
 
             // Try to switch to Flow testnet for both Privy and MetaMask
             try {
+                console.log('🔄 Attempting network switch...');
                 // Get the provider from either Privy or MetaMask
                 const privyWallet = wallets.find(wallet =>
                     wallet.address.toLowerCase() === userAddress.toLowerCase()
@@ -113,18 +134,21 @@ export const useWalletContract = () => {
                 let provider;
                 if (privyWallet && privyWallet.getEthereumProvider) {
                     provider = await privyWallet.getEthereumProvider();
+                    console.log('📡 Using Privy provider for network switch');
                 } else {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     provider = (window as any).ethereum;
+                    console.log('📡 Using MetaMask provider for network switch');
                 }
 
                 if (provider && provider.request) {
                     await switchToFlowTestnet(provider);
                 }
             } catch (networkError) {
-                console.warn('Network switch failed, continuing with current network:', networkError);
+                console.warn('⚠️ Network switch failed, continuing with current network:', networkError);
             }
 
+            console.log('📝 Writing to contract...');
             // Write to contract
             const hash = await walletClient.writeContract({
                 address: contractAddress,
@@ -134,12 +158,29 @@ export const useWalletContract = () => {
                 account,
             });
 
-            console.log('Transaction hash:', hash);
+            console.log('✅ Transaction submitted successfully! Hash:', hash);
             return hash;
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : `Failed to execute ${functionName}`;
+            console.error('❌ Contract write execution failed:', error);
+
+            // Amélioration de la gestion d'erreur
+            let errorMessage = `Failed to execute ${functionName}`;
+
+            if (error instanceof Error) {
+                if (error.message.includes("Can't find variable: Buffer")) {
+                    errorMessage = 'Browser compatibility issue. Please refresh the page and try again.';
+                } else if (error.message.includes('User rejected')) {
+                    errorMessage = 'Transaction was rejected by user.';
+                } else if (error.message.includes('insufficient funds')) {
+                    errorMessage = 'Insufficient funds for transaction.';
+                } else if (error.message.includes('execution reverted')) {
+                    errorMessage = 'Transaction failed: Smart contract execution reverted.';
+                } else {
+                    errorMessage = error.message;
+                }
+            }
+
             setError(errorMessage);
-            console.error(`Error executing ${functionName}:`, error);
             throw error;
         } finally {
             setIsLoading(false);
