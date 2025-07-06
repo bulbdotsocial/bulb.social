@@ -146,24 +146,26 @@ const PWAInstallPrompt: React.FC = () => {
     >
       <Alert
         severity="info"
-        sx={{
+        sx={(theme) => ({
           width: '100%',
           alignItems: 'center',
-          bgcolor: 'primary.main',
-          color: 'white',
+          bgcolor: theme.palette.mode === 'light' ? 'primary.main' : '#2e2e2e',
+          color: '#ffffff',
           border: 'none',
           borderRadius: 2,
           opacity: 1,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+          boxShadow: theme.palette.mode === 'light'
+            ? '0 4px 12px rgba(0,0,0,0.3)'
+            : '0 4px 12px rgba(0,0,0,0.6)',
           '& .MuiAlert-icon': {
-            color: 'white',
+            color: '#ffffff',
           },
           '& .MuiAlert-message': {
             width: '100%',
-            color: 'white',
+            color: '#ffffff',
             fontWeight: 500,
           },
-        }}
+        })}
         action={
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Button
@@ -171,10 +173,10 @@ const PWAInstallPrompt: React.FC = () => {
               onClick={handleInstallClick}
               startIcon={<InstallIcon />}
               sx={{
-                color: 'white',
-                borderColor: 'white',
+                color: '#ffffff',
+                borderColor: '#ffffff',
                 '&:hover': {
-                  borderColor: 'white',
+                  borderColor: '#ffffff',
                   bgcolor: 'rgba(255,255,255,0.1)',
                 },
               }}
@@ -185,7 +187,7 @@ const PWAInstallPrompt: React.FC = () => {
             <IconButton
               size="small"
               onClick={handleDismiss}
-              sx={{ color: 'white' }}
+              sx={{ color: '#ffffff' }}
             >
               <CloseIcon fontSize="small" />
             </IconButton>
@@ -196,7 +198,7 @@ const PWAInstallPrompt: React.FC = () => {
           <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
             Install Bulb App
           </Typography>
-          <Typography variant="caption" sx={{ fontSize: '0.75rem', color: 'white' }}>
+          <Typography variant="caption" sx={{ fontSize: '0.75rem', color: '#ffffff' }}>
             Add to your home screen for the best experience
           </Typography>
         </Box>

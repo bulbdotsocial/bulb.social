@@ -564,15 +564,22 @@ const ProfilePage: React.FC = () => {
             value={currentTab}
             onChange={handleTabChange}
             centered
-            sx={{
+            sx={(theme) => ({
               '& .MuiTab-root': {
                 textTransform: 'none',
                 fontWeight: 600,
                 fontSize: '0.75rem',
                 letterSpacing: '1px',
                 color: 'text.secondary',
+                backgroundColor: 'transparent',
                 '&.Mui-selected': {
                   color: 'text.primary',
+                  backgroundColor: 'transparent',
+                },
+                '&:hover': {
+                  backgroundColor: theme.palette.mode === 'light'
+                    ? 'rgba(0,0,0,0.04)'
+                    : 'rgba(255,255,255,0.04)',
                 },
               },
               '& .MuiTabs-indicator': {
@@ -580,7 +587,7 @@ const ProfilePage: React.FC = () => {
                 height: 1,
                 bottom: 0,
               },
-            }}
+            })}
           >
             <Tab
               icon={<GridOnIcon fontSize="small" />}
