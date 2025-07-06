@@ -720,12 +720,13 @@ const UserProfilePage: React.FC = () => {
         )}
 
         {/* Tabs */}
-        <Box sx={{ borderTop: 1, borderColor: 'divider' }}>
+        <Box sx={{ borderTop: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
           <Tabs
             value={currentTab}
             onChange={handleTabChange}
             centered
             sx={(theme) => ({
+              backgroundColor: 'transparent',
               '& .MuiTab-root': {
                 textTransform: 'none',
                 fontWeight: 600,
