@@ -129,6 +129,18 @@ export const CustomThemeProvider: React.FC<{ children: React.ReactNode }> = ({ c
           },
         },
       },
+      MuiTabs: {
+        styleOverrides: {
+          root: {
+            backgroundColor: 'transparent',
+          },
+          indicator: {
+            backgroundColor: mode === 'light' 
+              ? 'rgba(38, 38, 38, 0.7)' // 70% opacity of text.primary in light mode
+              : 'rgba(255, 255, 255, 0.7)', // 70% opacity of text.primary in dark mode
+          },
+        },
+      },
     },
   });
 
