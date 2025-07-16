@@ -19,7 +19,7 @@ services:
   # OrbitDB Service
   orbitdb:
     build:
-      context: ./orbitdb-service
+      context: ./server/orbitdb-service
     container_name: orbitdb
     networks:
       - app_network
@@ -34,7 +34,7 @@ services:
   # Go Server
   go-server:
     build:
-      context: .
+      context: ./server
       dockerfile: Dockerfile
     container_name: go-server
     networks:
@@ -52,7 +52,7 @@ services:
   # Client React
   client:
     build:
-      context: ../client
+      context: ./client
       dockerfile: Dockerfile
     container_name: bulb-client
     networks:
