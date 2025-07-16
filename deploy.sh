@@ -7,8 +7,8 @@
 set -e  # Arrêter le script en cas d'erreur
 
 # Configuration
-VPS_HOST="vps.2.paris.srv.network"
-IDENTITY_KEY="$HOME/.ssh/vps.2.paris.srv.network.key"  # Chemin vers votre clé SSH
+VPS_HOST="vps.2.zurich.srv.network"
+IDENTITY_KEY="$HOME/.ssh/vps.2.zurich.srv.network.key"  # Chemin vers votre clé SSH
 VPS_USER="ubuntu"
 REPO_URL="https://github.com/bulbdotsocial/bulb.social.git"
 REPO_BRANCH="main"

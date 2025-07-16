@@ -140,8 +140,9 @@ export default defineConfig({
         ]
       },
       workbox: {
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
         globPatterns: [
-          '**/*.{js,css,html,ico,png,svg}',
+          '**/*.{js,css,html,ico,png,svg,woff2}',
           'android/*.png',
           'ios/*.png',
           'windows11/*.png'
@@ -201,5 +202,19 @@ export default defineConfig({
       'Cross-Origin-Opener-Policy': 'unsafe-none',
       'Content-Security-Policy': "frame-ancestors 'self' https://auth.privy.io; frame-src 'self' https://auth.privy.io https://*.privy.io"
     }
+  },
+  build: {
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-mui': ['@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
+          'vendor-routing': ['react-router-dom'],
+          'vendor-web3': ['viem', '@ensdomains/ensjs'],
+          'vendor-auth': ['@privy-io/react-auth'],
+        },
+      },
+    },
   },
 })

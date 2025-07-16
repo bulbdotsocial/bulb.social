@@ -19,7 +19,8 @@ COPY public/ ./public/
 COPY index.html ./
 
 # Build de l'application
-RUN npm run build
+RUN npm run build 
+#|| (echo "Build failed - checking vite.config.ts..." && cat vite.config.ts && exit 1)
 
 # Stage 2: Serveur de production avec nginx
 FROM nginx:alpine
