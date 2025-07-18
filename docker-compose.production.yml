@@ -44,6 +44,7 @@ services:
     environment:
       - IPFS_API_URL=http://kubo:5001
       - ORBITDB_API_URL=http://orbitdb:3000
+      - ALLOWED_ORIGIN=${ALLOWED_ORIGIN:-https://api.bulb.social}
     depends_on:
       - kubo
       - orbitdb
@@ -59,6 +60,8 @@ services:
       - app_network
     ports:
       - "80:80"     # Servir le client sur le port 80 standard
+    environment:
+      - VITE_API_URL=${VITE_API_URL:-https://api.bulb.social}
     depends_on:
       - go-server
     restart: unless-stopped

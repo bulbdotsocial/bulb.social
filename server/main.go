@@ -63,7 +63,7 @@ func main() {
 	// CORS configuration
 	// Allow only POST requests from https://bulb.social
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"https://bulb.social"}
+	config.AllowOrigins = []string{os.Getenv("ALLOWED_ORIGIN")}
 	config.AllowMethods = []string{"POST"}
 
 	router.Use(cors.New(config))

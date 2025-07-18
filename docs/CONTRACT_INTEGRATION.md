@@ -12,11 +12,13 @@ This directory contains the smart contract integration for the Bulb social media
 ## Features
 
 ### 1. Profile Management
+
 - **Create Profile**: Users can create their profile on-chain
 - **Profile Count**: Track total number of profiles created
 - **Profile Lookup**: Check if a user has a profile and get their profile address
 
 ### 2. Contract Functions
+
 - `createProfile(username, profilePicture, description)` - Create a new profile
 - `getProfilesCount()` - Get total number of profiles
 - `getAllProfiles()` - Get all profile addresses
@@ -26,6 +28,7 @@ This directory contains the smart contract integration for the Bulb social media
 ## Integration Components
 
 ### 1. Configuration (`src/config/contract.ts`)
+
 - Contract ABI and address configuration
 - Flow testnet network configuration
 - Type-safe contract interface
@@ -33,11 +36,13 @@ This directory contains the smart contract integration for the Bulb social media
 ### 2. Hooks
 
 #### `useBulbFactory` (`src/hooks/useBulbFactory.ts`)
+
 - Read-only contract interactions
 - Fetches profiles count and all profiles
 - Provides user profile lookup functionality
 
 #### `useContractWrite` (`src/hooks/useContractWrite.ts`)
+
 - Write operations to the contract
 - Profile creation functionality
 - Handles MetaMask integration and network switching
@@ -45,6 +50,7 @@ This directory contains the smart contract integration for the Bulb social media
 ### 3. UI Components
 
 #### `ProfilesCounter` (`src/components/ProfilesCounter.tsx`)
+
 - Displays real-time profiles count from the contract
 - Shows contract information and network details
 - Available in both card and compact variants
@@ -53,6 +59,7 @@ This directory contains the smart contract integration for the Bulb social media
 ## Usage Examples
 
 ### Display Profiles Count
+
 ```tsx
 import ProfilesCounter from './components/ProfilesCounter';
 
@@ -64,6 +71,7 @@ import ProfilesCounter from './components/ProfilesCounter';
 ```
 
 ### Check User Profile
+
 ```tsx
 import { useBulbFactory } from './hooks/useBulbFactory';
 
@@ -77,6 +85,7 @@ const handleCheckProfile = async () => {
 ```
 
 ### Create Profile
+
 ```tsx
 import { useContractWrite } from './hooks/useContractWrite';
 
@@ -94,6 +103,67 @@ const handleCreateProfile = async () => {
     console.error('Failed to create profile:', error);
   }
 };
+```
+
+### Display Individual Profile Data
+
+```tsx
+import { useProfileContract } from './hooks/useProfileContract';
+
+const { profileInfo, isLoading, error } = useProfileContract(profileAddress);
+
+return (
+  <div>
+    <h3>{profileInfo?.username}</h3>
+    <img src={`https://ipfs.io/ipfs/${profileInfo?.profilePicture}`} alt="Profile" />
+    <p>{profileInfo?.description}</p>
+  </div>
+);
+```
+
+### Listen to Contract Events (future extension)
+
+Exemple réel d'écoute d'événements ProfileCreated avec viem :
+
+```tsx
+import { useEffect } from 'react';
+import { usePublicClient } from 'wagmi';
+import { bulbFactoryAbi, BULB_FACTORY_ADDRESS } from '../config/contract';
+
+export function useProfileCreatedListener(onProfileCreated: (address: string, event: any) => void) {
+  const client = usePublicClient();
+  useEffect(() => {
+    if (!client) return;
+    const unwatch = client.watchContractEvent({
+      address: BULB_FACTORY_ADDRESS,
+      abi: bulbFactoryAbi,
+      eventName: 'ProfileCreated',
+      onLogs: logs => {
+        logs.forEach(log => {
+          const address = log.args?.profileAddress;
+          onProfileCreated(address, log);
+        });
+      },
+    });
+    return () => unwatch();
+  }, [client, onProfileCreated]);
+}
+```
+
+### Subscription System (future extension)
+
+Exemple réel d'abonnement/désabonnement à un profil :
+
+```tsx
+import { useProfileContract } from '../hooks/useProfileContract';
+
+const { subscribe, unsubscribe } = useProfileContract(profileAddress);
+
+// S'abonner à un profil (tierId = niveau d'abonnement)
+await subscribe(tierId);
+
+// Se désabonner d'un profil
+await unsubscribe();
 ```
 
 ## Network Configuration
@@ -122,10 +192,12 @@ The app automatically handles network switching and addition when users attempt 
 ## Integration Points
 
 ### Layout Component
+
 - ProfilesCounter added to mobile drawer sidebar
 - Displays contract stats for all users
 
 ### Home Page
+
 - ProfilesCounter in desktop sidebar
 - Compact variant in mobile header
 - Real-time updates of network activity
@@ -160,6 +232,7 @@ The integration includes comprehensive error handling for:
 ### Debug Information
 
 The ProfilesCounter component includes debug information:
+
 - Contract address
 - Network information
 - Real-time profiles count

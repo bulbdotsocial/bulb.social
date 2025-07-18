@@ -27,41 +27,95 @@ const [checkingProfile, setCheckingProfile] = useState(false);
 - Uses the `useBulbFactory` hook to query the smart contract
 - Updates state based on profile existence
 
-#### **Dynamic Button Replacement:**
-The original "Edit Profile" button is now replaced with conditional rendering:
 
-**Loading State:**
-```typescript
-<Button
-  variant="outlined"
-  disabled
-  startIcon={<CircularProgress size={16} />}
->
-  Checking...
-</Button>
+#### **Dynamic Button Replacement (Code Example):**
+The original "Edit Profile" button is now replaced with conditional rendering in `ProfilePage.tsx`:
+
+```tsx
+{checkingProfile ? (
+  <Button
+    variant="outlined"
+    size="small"
+    disabled
+    startIcon={<CircularProgress size={16} />}
+  >
+    Checking...
+  </Button>
+) : hasExclusiveProfile === false ? (
+  <Button
+    variant="contained"
+    size="small"
+    onClick={() => setCreateProfileOpen(true)}
+    startIcon={<ExclusiveIcon />}
+    sx={{
+      textTransform: 'none',
+      fontWeight: 600,
+      background: 'linear-gradient(45deg, #6B7280, #374151)',
+      color: 'white',
+      '&:hover': {
+        background: 'linear-gradient(45deg, #4B5563, #1F2937)',
+      },
+    }}
+  >
+    Create Exclusive Profile
+  </Button>
+) : (
+  <Button
+    variant="outlined"
+    size="small"
+    onClick={() => setUpdateProfileOpen(true)}
+    sx={{
+      textTransform: 'none',
+      fontWeight: 600,
+      borderColor: 'divider',
+      color: 'text.primary',
+      '&:hover': {
+        borderColor: 'text.secondary',
+      },
+    }}
+  >
+    Edit Profile
+  </Button>
+)}
 ```
 
-**No Exclusive Profile (Primary Action):**
-```typescript
-<Button
-  variant="contained"
-  onClick={() => setCreateProfileOpen(true)}
-  startIcon={<ExclusiveIcon />}
-  sx={{
-    background: 'linear-gradient(45deg, #FF6B6B, #4ECDC4)',
-    // Styled as a premium call-to-action
+**Dialog Integration Example:**
+```tsx
+<CreateProfileDialog
+  open={createProfileOpen}
+  onClose={() => setCreateProfileOpen(false)}
+  onSuccess={(profileAddress) => {
+    setHasExclusiveProfile(true);
+    setCreateProfileOpen(false);
+    checkProfile(); // Refresh profile state
   }}
->
-  Create Exclusive Profile
-</Button>
+/>
 ```
 
-**Has Exclusive Profile (Fallback to Edit):**
-```typescript
-<Button variant="outlined">
-  Edit Profile
-</Button>
+**Profile Check Logic Example:**
+```tsx
+const checkProfile = useCallback(async () => {
+  if (walletAddress) {
+    setCheckingProfile(true);
+    try {
+      const { hasProfile, profileAddress } = await checkUserProfile(walletAddress as `0x${string}`);
+      setHasExclusiveProfile(hasProfile);
+      setProfileContractAddress(profileAddress);
+    } catch (error) {
+      setHasExclusiveProfile(false);
+      setProfileContractAddress(null);
+    } finally {
+      setCheckingProfile(false);
+    }
+  } else {
+    setHasExclusiveProfile(null);
+    setProfileContractAddress(null);
+  }
+}, [walletAddress, checkUserProfile]);
 ```
+
+**Best Practice:**
+- Always refresh the profile state after creation or update to ensure the UI reflects the latest contract data.
 
 ### 2. **CreateProfileDialog Integration**
 - Added the dialog component at the bottom of the ProfilePage

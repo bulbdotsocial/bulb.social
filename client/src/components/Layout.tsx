@@ -54,9 +54,13 @@ import {
   CameraAlt as CameraAltIcon,
   Close as CloseIcon,
 } from '@mui/icons-material';
+
 import PWAInstallPrompt from './PWAInstallPrompt';
 import Camera from './Camera';
 import CropSelector from './CropSelector';
+
+// Utiliser la variable d'environnement VITE_API_URL
+const API_URL = import.meta.env.VITE_API_URL || 'https://api.bulb.social';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -215,7 +219,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       const formData = new FormData();
       formData.append('file', selectedImage);
       
-      const uploadResponse = await fetch('https://api.bulb.social/api/v0/upload-pic', {
+      const uploadResponse = await fetch(`${API_URL}/api/v0/upload-pic`, {
         method: 'POST',
         body: formData,
         mode: 'cors',
@@ -242,7 +246,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         createdAt: new Date().toISOString(),
       };
       
-      const createPostResponse = await fetch('https://api.bulb.social/api/v0/create-post', {
+      const createPostResponse = await fetch(`${API_URL}/api/v0/create-post`, {
         method: 'POST',
         mode: 'cors',
         credentials: 'omit',
