@@ -19,6 +19,8 @@ COPY public/ ./public/
 COPY index.html ./
 
 # Build de l'application
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build 
 #|| (echo "Build failed - checking vite.config.ts..." && cat vite.config.ts && exit 1)
 

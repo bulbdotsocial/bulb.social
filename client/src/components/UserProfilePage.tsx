@@ -131,7 +131,7 @@ const UserProfilePage: React.FC = () => {
         ensUpdatedRef.current = false; // Reset ENS update flag for new address
         fetchedAddressRef.current = address; // Mark this address as being fetched
 
-        const API_URL = import.meta.env.VITE_API_URL || 'https://api.bulb.social';
+        const API_URL = import.meta.env.VITE_API_URL;
         const response = await fetch(`${API_URL}/api/v0/profile/${address}`);
 
         if (!response.ok) {

@@ -55,13 +55,13 @@ services:
     build:
       context: ./client
       dockerfile: Dockerfile
+      args:
+      - VITE_API_URL=${VITE_API_URL:-https://api.bulb.social}
     container_name: bulb-client
     networks:
       - app_network
     ports:
       - "80:80"     # Servir le client sur le port 80 standard
-    environment:
-      - VITE_API_URL=${VITE_API_URL:-https://api.bulb.social}
     depends_on:
       - go-server
     restart: unless-stopped

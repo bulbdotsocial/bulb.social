@@ -60,7 +60,7 @@ import Camera from './Camera';
 import CropSelector from './CropSelector';
 
 // Utiliser la variable d'environnement VITE_API_URL
-const API_URL = import.meta.env.VITE_API_URL || 'https://api.bulb.social';
+const API_URL = import.meta.env.VITE_API_URL;
 
 interface LayoutProps {
   children: React.ReactNode;

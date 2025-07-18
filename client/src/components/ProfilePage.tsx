@@ -135,7 +135,7 @@ const ProfilePage: React.FC = () => {
 
     setLoadingPosts(true);
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'https://api.bulb.social';
+      const API_URL = import.meta.env.VITE_API_URL;
       const response = await fetch(`${API_URL}/api/v0/profile/${walletAddress}`);
       if (response.ok) {
         const data = await response.json();
