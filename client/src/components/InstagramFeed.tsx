@@ -1,17 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import ProfileUser from './ProfileUser';
+import React, { memo } from 'react';
+import UserDisplayComponent from './UserDisplayComponent';
+import { Card as UICard, Button, Box, Typography, Chip } from './ui';
+import { usePostsOptimized } from '../hooks/usePostsOptimized';
+import { useResponsive } from '../hooks/useResponsive';
 import {
-  Box,
-  Card,
   CardHeader,
   CardMedia,
   CardContent,
   CardActions,
   IconButton,
-  Typography,
   useTheme,
-  useMediaQuery,
-  Chip,
   Paper,
   CircularProgress,
   Alert,
@@ -54,13 +52,25 @@ interface ApiItem {
   };
 }
 
-const InstagramFeed: React.FC = () => {
+// Main InstagramFeed Component
+const InstagramFeed: React.FC = memo(() => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { isMobile } = useResponsive();
+  
+  // Use optimized posts hook
+  const {
+    posts,
+    isLoading,
+    error,
+    isEmpty,
+    hasMore,
+    loadMore,
+    likePost,
+    refresh,
+  } = usePostsOptimized({
+    autoFetch: true,
+    cacheKey: 'instagram-feed',
+  });
 
   // Fonction pour calculer le temps écoulé
   const getTimeAgo = (dateString: string): string => {
@@ -134,8 +144,26 @@ const InstagramFeed: React.FC = () => {
     fetchPosts();
   }, []);
 
-  const PostCard: React.FC<{ post: Post }> = ({ post }) => (
-    <Card
+  const PostCard: React.FC<{ post: Post }> = memo(({ post }) => {
+    const handleLike = React.useCallback(() => {
+      // TODO: Implement like functionality
+      console.log('Like post:', post.id);
+    }, [post.id]);
+
+    const handleComment = React.useCallback(() => {
+      // TODO: Implement comment functionality  
+      console.log('Comment on post:', post.id);
+    }, [post.id]);
+
+    const handleShare = React.useCallback(() => {
+      // TODO: Implement share functionality
+      console.log('Share post:', post.id);
+    }, [post.id]);
+
+    return (
+    <UICard
+      variant="elevated"
+      interactive={false}
       sx={{
         maxWidth: 468,
         mx: 'auto',
@@ -145,7 +173,14 @@ const InstagramFeed: React.FC = () => {
     >
       {/* Header */}
       <CardHeader
-        avatar={<ProfileUser address={post.address} avatarSize={32} linkToProfile={true} />}
+        avatar={
+          <UserDisplayComponent 
+            address={post.address} 
+            avatarSize={32} 
+            linkToProfile={true}
+            variant="full"
+          />
+        }
         action={
           <IconButton aria-label="settings">
             <MoreVertIcon />
@@ -220,11 +255,12 @@ const InstagramFeed: React.FC = () => {
 
         {/* Caption */}
         <Box sx={{ mb: 1 }}>
-          <ProfileUser
+          <UserDisplayComponent
             address={post.address}
             showAvatar={false}
             typography="body2"
             linkToProfile={true}
+            variant="full"
           />
           <Typography
             component="span"
@@ -252,8 +288,11 @@ const InstagramFeed: React.FC = () => {
           {post.timeAgo.toUpperCase()}
         </Typography>
       </CardContent>
-    </Card>
-  );
+    </UICard>
+    );
+  });
+
+  PostCard.displayName = 'PostCard';
 
   if (loading) {
     return (
